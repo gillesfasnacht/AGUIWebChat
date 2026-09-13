@@ -1,4 +1,4 @@
-﻿namespace AGUIWebChatServer.Telemetry
+namespace AGUIWebChat.Contracts
 {
     public sealed record LlmTelemetryDto(
         string RunId,

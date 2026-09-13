@@ -5,8 +5,7 @@ namespace AGUIFluentUIChatClient.Services
     public sealed class TelemetryService : IAsyncDisposable
     {
         private readonly HubConnection _hubConnection;
-
-        public event Action<string>? TestReceived;
+        public string Channel { get; } = Guid.NewGuid().ToString("N");
 
         public event Action<ReasoningTelemetryDto>? ReasoningCompleted;
 
@@ -15,7 +14,7 @@ namespace AGUIFluentUIChatClient.Services
         public TelemetryService(string telemetryUrl)
         {
             _hubConnection = new HubConnectionBuilder()
-                .WithUrl(telemetryUrl)
+                .WithUrl(telemetryUrl + "?channel=" + Channel)
                 .WithAutomaticReconnect()
                 .Build();
 

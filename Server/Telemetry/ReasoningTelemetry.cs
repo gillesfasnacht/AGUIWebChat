@@ -1,4 +1,4 @@
-﻿using AGUIWebChatServer.Hubs;
+using AGUIWebChatServer.Hubs;
 using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.AI;
@@ -6,7 +6,7 @@ using Serilog;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace AGUIWebChatServer.Midleware
+namespace AGUIWebChatServer.Telemetry
 {
     static class ReasoningTelemetry
     {
@@ -22,6 +22,7 @@ namespace AGUIWebChatServer.Midleware
             AgentRunOptions? options,
             AIAgent innerAgent,
             IHubContext<TelemetryHub> telemetryHub,
+            string? telemetryChannel,
             string runId,
             string agentName,
             string modelName,
@@ -74,6 +75,7 @@ namespace AGUIWebChatServer.Midleware
                         await CompleteReasoningAsync(
                             reasoningActivity,
                             telemetryHub,
+                            telemetryChannel,
                             runId,
                             agentName,
                             modelName,
@@ -149,6 +151,7 @@ namespace AGUIWebChatServer.Midleware
                     await CompleteReasoningAsync(
                         reasoningActivity,
                         telemetryHub,
+                            telemetryChannel,
                         runId,
                         agentName,
                         modelName,
@@ -163,6 +166,7 @@ namespace AGUIWebChatServer.Midleware
         private static async Task CompleteReasoningAsync(
             Activity reasoningActivity,
             IHubContext<TelemetryHub> telemetryHub,
+            string? telemetryChannel,
             string runId,
             string agentName,
             string modelName,
@@ -191,7 +195,7 @@ namespace AGUIWebChatServer.Midleware
                 characterCount,
                 durationMs);
 
-            await telemetryHub.Clients.All.SendAsync("ReasoningCompleted",
+            await TelemetryPublisher.SendAsync(telemetryHub, telemetryChannel, "ReasoningCompleted",
                 new ReasoningTelemetryDto(
                     RunId: runId,
                     DurationMs: durationMs,

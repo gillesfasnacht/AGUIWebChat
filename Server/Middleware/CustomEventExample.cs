@@ -1,7 +1,7 @@
-﻿using AGUI.Abstractions;
+using AGUI.Abstractions;
 using Microsoft.Agents.AI;
 
-namespace AGUIWebChatServer.Midleware
+namespace AGUIWebChatServer.Middleware
 {
     public class CustomEventExample
     {

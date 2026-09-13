@@ -1,5 +1,5 @@
-using AGUIFluentUIChatClient.Components;
-using AGUIFluentUIChatClient.Midleware;
+﻿using AGUIFluentUIChatClient.Components;
+using AGUIFluentUIChatClient.Middleware;
 using AGUIFluentUIChatClient.Services;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -37,7 +37,7 @@ Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().Proc
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddFluentUIComponents();
-builder.Services.AddSingleton(new TelemetryService("http://localhost:5100/telemetry"));
+builder.Services.AddScoped(_ => new TelemetryService(new Uri(new Uri(serverUrl), "/telemetry").ToString()));
 
 // AG-UI client SSE event logger
 builder.Services.AddSingleton<IAgUiClientSseEventLogger, AgUiClientSseEventLogger>();

@@ -1,4 +1,4 @@
-﻿using AGUIWebChatServer.Hubs;
+using AGUIWebChatServer.Hubs;
 using AGUIWebChatServer.Telemetry;
 
 using Microsoft.Agents.AI;
@@ -12,7 +12,7 @@ using Serilog;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace AGUIFluentUIChatClient.Midleware
+namespace AGUIWebChatServer.Telemetry
 {
     internal static class LlmTelemetry
     {
@@ -21,6 +21,7 @@ namespace AGUIFluentUIChatClient.Midleware
         public static async IAsyncEnumerable<AgentResponseUpdate> ObserveAsync(
             IAsyncEnumerable<AgentResponseUpdate> updates,
             IHubContext<TelemetryHub> telemetryHub,
+            string? telemetryChannel,
             string runId,
             string agentName,
             string modelName,
@@ -120,7 +121,7 @@ namespace AGUIFluentUIChatClient.Midleware
                     telemetry.OllamaTotalDurationMs,
                     telemetry.GenerationTokensPerSecond);
 
-                await telemetryHub.Clients.All.SendAsync(
+                await TelemetryPublisher.SendAsync(telemetryHub, telemetryChannel,
                     "LlmMetricsCompleted",
                     telemetry,
                     cancellationToken);

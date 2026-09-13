@@ -1,35 +1,34 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 
-namespace AGUIFluentUIChatClient.Midleware
+namespace AGUIWebChatServer.Middleware
 {
-    public sealed class AgUiClientSseEventLogger : IAgUiClientSseEventLogger
+    public sealed class AgUiSseEventLogger : IAgUiSseEventLogger
     {
-        private readonly ILogger<AgUiClientSseEventLogger> _logger;
+        private readonly ILogger<AgUiSseEventLogger> _logger;
 
         private readonly ConcurrentDictionary<string, MessageBuffer>
             _messages = new();
 
-        public AgUiClientSseEventLogger(ILogger<AgUiClientSseEventLogger> logger)
+        public AgUiSseEventLogger(ILogger<AgUiSseEventLogger> logger)
         {
             _logger = logger;
 
             _logger.LogInformation(
-                "AgUiClientSseEventLogger CLR type = {LoggerType}",
-                typeof(AgUiClientSseEventLogger).FullName);
-
-            _logger.LogInformation(
-                "AgUiClientSseEventLogger levels: Trace={TraceEnabled}, Debug={DebugEnabled}, Information={InformationEnabled}",
+                "AgUiSseEventLogger levels: Trace={TraceEnabled}, Debug={DebugEnabled}, Information={InformationEnabled}",
                 _logger.IsEnabled(LogLevel.Trace),
                 _logger.IsEnabled(LogLevel.Debug),
                 _logger.IsEnabled(LogLevel.Information));
+
+            _logger.LogTrace("TEST TRACE AgUiSseEventLogger");
+            _logger.LogDebug("TEST DEBUG AgUiSseEventLogger");
+            _logger.LogInformation("TEST INFORMATION AgUiSseEventLogger");
         }
 
         public void LogEvent(string sseEvent)
         {
-            string? data =
-                ExtractData(sseEvent);
+            string? data = ExtractData(sseEvent);
 
             if (string.IsNullOrWhiteSpace(data))
                 return;
@@ -39,15 +38,14 @@ namespace AGUIFluentUIChatClient.Midleware
                 using JsonDocument document =
                     JsonDocument.Parse(data);
 
-                JsonElement root =
-                    document.RootElement;
+                JsonElement root = document.RootElement;
 
                 string eventType =
-                    GetString(root, "type")
-                    ?? "UNKNOWN";
+                    GetString(root, "type") ?? "UNKNOWN";
 
+                // Tous les événements restent disponibles en Trace.
                 _logger.LogTrace(
-                    "AG-UI CLIENT raw event {EventType}: {SseData}",
+                    "AG-UI raw event {EventType}: {SseData}",
                     eventType,
                     data);
 
@@ -62,21 +60,15 @@ namespace AGUIFluentUIChatClient.Midleware
                         break;
 
                     case "TEXT_MESSAGE_START":
-                        StartMessage(
-                            root,
-                            MessageKind.Text);
+                        StartMessage(root, MessageKind.Text);
                         break;
 
                     case "TEXT_MESSAGE_CONTENT":
-                        AppendMessage(
-                            root,
-                            MessageKind.Text);
+                        AppendMessage(root, MessageKind.Text);
                         break;
 
                     case "TEXT_MESSAGE_END":
-                        EndMessage(
-                            root,
-                            MessageKind.Text);
+                        EndMessage(root, MessageKind.Text);
                         break;
 
                     case "REASONING_START":
@@ -84,21 +76,15 @@ namespace AGUIFluentUIChatClient.Midleware
                         break;
 
                     case "REASONING_MESSAGE_START":
-                        StartMessage(
-                            root,
-                            MessageKind.Reasoning);
+                        StartMessage(root, MessageKind.Reasoning);
                         break;
 
                     case "REASONING_MESSAGE_CONTENT":
-                        AppendMessage(
-                            root,
-                            MessageKind.Reasoning);
+                        AppendMessage(root, MessageKind.Reasoning);
                         break;
 
                     case "REASONING_MESSAGE_END":
-                        EndMessage(
-                            root,
-                            MessageKind.Reasoning);
+                        EndMessage(root, MessageKind.Reasoning);
                         break;
 
                     case "REASONING_END":
@@ -118,9 +104,7 @@ namespace AGUIFluentUIChatClient.Midleware
                         break;
 
                     default:
-                        LogGenericEvent(
-                            eventType,
-                            root);
+                        LogGenericEvent(eventType, root);
                         break;
                 }
             }
@@ -128,30 +112,36 @@ namespace AGUIFluentUIChatClient.Midleware
             {
                 _logger.LogWarning(
                     exception,
-                    "Unable to parse AG-UI CLIENT SSE event: {SseData}",
+                    "Unable to parse AG-UI SSE event: {SseData}",
                     data);
             }
         }
 
-        private void LogRunStarted(
-            JsonElement root)
+        // ---------------------------------------------------------
+        // RUN
+        // ---------------------------------------------------------
+
+        private void LogRunStarted(JsonElement root)
         {
             _logger.LogInformation(
-                "AG-UI CLIENT {EventType} ThreadId={ThreadId} RunId={RunId}",
+                "AG-UI {EventType} ThreadId={ThreadId} RunId={RunId}",
                 "RUN_STARTED",
                 GetString(root, "threadId"),
                 GetString(root, "runId"));
         }
 
-        private void LogRunFinished(
-            JsonElement root)
+        private void LogRunFinished(JsonElement root)
         {
             _logger.LogInformation(
-                "AG-UI CLIENT {EventType} ThreadId={ThreadId} RunId={RunId}",
+                "AG-UI {EventType} ThreadId={ThreadId} RunId={RunId}",
                 "RUN_FINISHED",
                 GetString(root, "threadId"),
                 GetString(root, "runId"));
         }
+
+        // ---------------------------------------------------------
+        // MESSAGES
+        // ---------------------------------------------------------
 
         private void StartMessage(
             JsonElement root,
@@ -163,7 +153,7 @@ namespace AGUIFluentUIChatClient.Midleware
             if (string.IsNullOrWhiteSpace(messageId))
             {
                 _logger.LogWarning(
-                    "AG-UI CLIENT {MessageKind} message started without MessageId",
+                    "AG-UI {MessageKind} message started without MessageId",
                     kind);
 
                 return;
@@ -173,12 +163,10 @@ namespace AGUIFluentUIChatClient.Midleware
                 GetString(root, "role");
 
             _messages[messageId] =
-                new MessageBuffer(
-                    kind,
-                    role);
+                new MessageBuffer(kind, role);
 
             _logger.LogTrace(
-                "AG-UI CLIENT {MessageKind}_MESSAGE_START MessageId={MessageId} Role={Role}",
+                "AG-UI {MessageKind}_MESSAGE_START MessageId={MessageId} Role={Role}",
                 kind,
                 messageId,
                 role);
@@ -203,14 +191,12 @@ namespace AGUIFluentUIChatClient.Midleware
             MessageBuffer buffer =
                 _messages.GetOrAdd(
                     messageId,
-                    _ => new MessageBuffer(
-                        kind,
-                        null));
+                    _ => new MessageBuffer(kind, null));
 
             buffer.Append(delta);
 
             _logger.LogTrace(
-                "AG-UI CLIENT {MessageKind} fragment MessageId={MessageId} Delta={Delta}",
+                "AG-UI {MessageKind} fragment MessageId={MessageId} Delta={Delta}",
                 kind,
                 messageId,
                 delta);
@@ -227,7 +213,7 @@ namespace AGUIFluentUIChatClient.Midleware
                 return;
 
             _logger.LogTrace(
-                "AG-UI CLIENT {MessageKind}_MESSAGE_END MessageId={MessageId}",
+                "AG-UI {MessageKind}_MESSAGE_END MessageId={MessageId}",
                 kind,
                 messageId);
 
@@ -236,7 +222,7 @@ namespace AGUIFluentUIChatClient.Midleware
                     out MessageBuffer? buffer))
             {
                 _logger.LogWarning(
-                    "AG-UI CLIENT {MessageKind} message ended but no buffer exists MessageId={MessageId}",
+                    "AG-UI {MessageKind} message ended but no buffer exists MessageId={MessageId}",
                     kind,
                     messageId);
 
@@ -249,7 +235,7 @@ namespace AGUIFluentUIChatClient.Midleware
             if (kind == MessageKind.Text)
             {
                 _logger.LogInformation(
-                    "AG-UI CLIENT {EventType} MessageId={MessageId} Role={Role} Content={Content}",
+                    "AG-UI {EventType} MessageId={MessageId} Role={Role} Content={Content}",
                     "TEXT_MESSAGE",
                     messageId,
                     buffer.Role,
@@ -258,7 +244,7 @@ namespace AGUIFluentUIChatClient.Midleware
             else
             {
                 _logger.LogDebug(
-                    "AG-UI CLIENT {EventType} MessageId={MessageId} Role={Role} Content={Content}",
+                    "AG-UI {EventType} MessageId={MessageId} Role={Role} Content={Content}",
                     "REASONING_MESSAGE",
                     messageId,
                     buffer.Role,
@@ -266,62 +252,73 @@ namespace AGUIFluentUIChatClient.Midleware
             }
         }
 
-        private void LogReasoningStart(
-            JsonElement root)
+        // ---------------------------------------------------------
+        // REASONING
+        // ---------------------------------------------------------
+
+        private void LogReasoningStart(JsonElement root)
         {
             _logger.LogDebug(
-                "AG-UI CLIENT {EventType} MessageId={MessageId}",
+                "AG-UI {EventType} MessageId={MessageId}",
                 "REASONING_START",
                 GetString(root, "messageId"));
         }
 
-        private void LogReasoningEnd(
-            JsonElement root)
+        private void LogReasoningEnd(JsonElement root)
         {
             _logger.LogDebug(
-                "AG-UI CLIENT {EventType} MessageId={MessageId}",
+                "AG-UI {EventType} MessageId={MessageId}",
                 "REASONING_END",
                 GetString(root, "messageId"));
         }
 
-        private void LogToolCallStart(
-            JsonElement root)
+        // ---------------------------------------------------------
+        // TOOL CALLS
+        // ---------------------------------------------------------
+
+        private void LogToolCallStart(JsonElement root)
         {
             _logger.LogInformation(
-                "AG-UI CLIENT {EventType} ToolCallId={ToolCallId} ToolCallName={ToolCallName}",
+                "AG-UI {EventType} ToolCallId={ToolCallId} ToolCallName={ToolCallName}",
                 "TOOL_CALL_START",
                 GetString(root, "toolCallId"),
                 GetString(root, "toolCallName"));
         }
 
-        private void LogToolCallArgs(
-            JsonElement root)
+        private void LogToolCallArgs(JsonElement root)
         {
             _logger.LogDebug(
-                "AG-UI CLIENT {EventType} ToolCallId={ToolCallId} Delta={Delta}",
+                "AG-UI {EventType} ToolCallId={ToolCallId} Delta={Delta}",
                 "TOOL_CALL_ARGS",
                 GetString(root, "toolCallId"),
                 GetString(root, "delta"));
         }
 
-        private void LogToolCallEnd(
-            JsonElement root)
+        private void LogToolCallEnd(JsonElement root)
         {
             _logger.LogInformation(
-                "AG-UI CLIENT {EventType} ToolCallId={ToolCallId}",
+                "AG-UI {EventType} ToolCallId={ToolCallId}",
                 "TOOL_CALL_END",
                 GetString(root, "toolCallId"));
         }
+
+        // ---------------------------------------------------------
+        // GENERIC
+        // ---------------------------------------------------------
 
         private void LogGenericEvent(
             string eventType,
             JsonElement root)
         {
             _logger.LogDebug(
-                "AG-UI CLIENT unhandled event {EventType} Data={Data}",
+                "AG-UI unhandled event {EventType} Data={Data}",
                 eventType,
                 root.GetRawText());
         }
+
+        // ---------------------------------------------------------
+        // SSE
+        // ---------------------------------------------------------
 
         private static string? ExtractData(
             string sseEvent)
@@ -355,6 +352,10 @@ namespace AGUIFluentUIChatClient.Midleware
                 : data.ToString();
         }
 
+        // ---------------------------------------------------------
+        // JSON
+        // ---------------------------------------------------------
+
         private static string? GetString(
             JsonElement element,
             string propertyName)
@@ -379,6 +380,10 @@ namespace AGUIFluentUIChatClient.Midleware
             };
         }
 
+        // ---------------------------------------------------------
+        // Internal types
+        // ---------------------------------------------------------
+
         private enum MessageKind
         {
             Text,
@@ -402,8 +407,7 @@ namespace AGUIFluentUIChatClient.Midleware
 
             public string? Role { get; }
 
-            public void Append(
-                string value)
+            public void Append(string value)
             {
                 lock (_sync)
                 {

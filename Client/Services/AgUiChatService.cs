@@ -15,10 +15,12 @@ public sealed class AgUiChatService
 {
     private readonly AIAgent _remoteAgent;
     private readonly AgentSession _session;
+    private readonly TelemetryService _telemetry;
     public event Action<string>? RunStarted;
 
-    public AgUiChatService(HttpClient httpClient)
+    public AgUiChatService(HttpClient httpClient, TelemetryService telemetry)
     {
+        _telemetry = telemetry;
         var chatClient = new AGUIChatClient(new AGUIChatClientOptions(httpClient, "/ag-ui"));
 
         _remoteAgent = chatClient.AsAIAgent();
@@ -42,7 +44,8 @@ public sealed class AgUiChatService
                 temperature = settings.Temperature,
                 topP = settings.TopP,
                 topK = settings.TopK,
-                numCtx = settings.NumCtx
+                numCtx = settings.NumCtx,
+                telemetryChannel = _telemetry.Channel
             });
 
         var runOptions = new ChatClientAgentRunOptions

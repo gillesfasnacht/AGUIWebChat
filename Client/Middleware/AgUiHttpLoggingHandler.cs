@@ -1,4 +1,4 @@
-﻿namespace AGUIFluentUIChatClient.Midleware
+namespace AGUIFluentUIChatClient.Middleware
 {
     public sealed class AgUiHttpLoggingHandler : DelegatingHandler
     {

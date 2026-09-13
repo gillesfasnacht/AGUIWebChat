@@ -1,4 +1,4 @@
-﻿@page "/chat"
+@page "/chat"
 
 @inject IDialogService DialogService
 @implements IDisposable
@@ -82,6 +82,11 @@
                           @(IsSending ? "Sending..." : "Send")
             </FluentButton>
 
+            @if (IsSending)
+            {
+                <FluentButton OnClick="CancelResponse">Stop</FluentButton>
+            }
+
         </div>
 
     </footer>
@@ -95,6 +100,10 @@
     private string? InputText;
 
     private bool IsSending;
+    private CancellationTokenSource? _sendCancellation;
+    private bool _disposed;
+
+    private void CancelResponse() => _sendCancellation?.Cancel();
 
     // =============================================================
     // Settings
@@ -179,12 +188,13 @@
         // ---------------------------------------------------------
 
         IsSending = true;
+        _sendCancellation = new CancellationTokenSource();
 
         await InvokeAsync(StateHasChanged);
 
         try
         {
-            await foreach (var update in AgUiChatService.SendAsync(userText, Settings))
+            await foreach (var update in AgUiChatService.SendAsync(userText, Settings, _sendCancellation.Token))
             {
                 var hasChanged = false;
 
@@ -219,9 +229,9 @@
                 }
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (_sendCancellation.IsCancellationRequested)
         {
-            // Cancellation support will be added later.
+            assistantMessage.Content += "\n\nResponse stopped.";
         }
         catch (Exception ex)
         {
@@ -232,8 +242,10 @@
             assistantMessage.IsStreaming = false;
 
             IsSending = false;
-
-            await InvokeAsync(StateHasChanged);
+            _sendCancellation.Dispose();
+            _sendCancellation = null;
+            if (!_disposed)
+                await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -276,6 +288,8 @@
 
     public void Dispose()
     {
+        _disposed = true;
+        _sendCancellation?.Cancel();
         AgUiChatService.RunStarted -= OnRunStarted;
         TelemetryService.ReasoningCompleted -= OnReasoningCompleted;
         TelemetryService.LlmMetricsCompleted -= OnLlmMetricsCompleted;

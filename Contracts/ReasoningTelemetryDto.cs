@@ -1,4 +1,4 @@
-﻿namespace AGUIWebChatServer.Hubs
+namespace AGUIWebChat.Contracts
 {
     public sealed record ReasoningTelemetryDto(
         string RunId,

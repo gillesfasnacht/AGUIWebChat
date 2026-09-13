@@ -1,211 +1,70 @@
-# AGUI WebChat Sample
+# AGUI WebChat
 
-This sample demonstrates a Blazor-based web chat application using the AG-UI protocol to communicate with an AI agent server.
+Application de chat Blazor Server (.NET 10), avec Fluent UI, un agent Ollama exposé via AG-UI et une télémétrie SignalR.
 
-The sample consists of two projects:
+## Structure
 
-1. **Server** - An ASP.NET Core server that hosts a simple chat agent using the AG-UI protocol
-2. **Client** - A Blazor Server application with a rich chat UI for interacting with the agent
+- `Client/Components/Pages/Chat.razor` : page de chat et annulation des réponses.
+- `Client/Components/Chat/` : messages, réglages, raisonnement et métriques.
+- `Client/Services/` : échanges AG-UI, paramètres et connexion SignalR par circuit.
+- `Client/Middleware/` et `Server/Middleware/` : interception HTTP et SSE.
+- `Server/Agents/ChatAgentFactory.cs` : création et instrumentation de l'agent.
+- `Server/Inference/` : paramètres d'inférence et validation.
+- `Server/Telemetry/` : observation des réponses et publication des métriques.
+- `Server/Hubs/` : connexion SignalR.
+- `Contracts/` : DTO partagés entre serveur et client.
+- `tests/AGUIWebChat.Tests/` : tests automatisés.
 
-## Prerequisites
+## Démarrage
 
-## Source control with Git
+Installer le SDK .NET 10 et disposer d'un serveur Ollama accessible avec le modèle choisi déjà installé.
 
-The project uses Git for source control, with `main` as the initial branch.
-The `.gitignore` excludes build output, Visual Studio user settings, logs,
-and local credentials. Shared application settings remain versioned; keep
-secrets in environment variables or .NET user secrets.
+Dans un premier terminal PowerShell :
 
-From the repository root, review and commit changes:
+```powershell
+$env:OLLAMA_ENDPOINT="http://localhost:11434"
+$env:OLLAMA_MODEL="granite4.2:8b"
+dotnet run --project Server --launch-profile http
+```
+
+`OLLAMA_ENDPOINT` est obligatoire ; `OLLAMA_MODEL` utilise `granite4.2:8b` par défaut. Choisir un modèle compatible avec les paramètres de raisonnement utilisés.
+
+Dans un second terminal :
+
+```powershell
+$env:AGUI_SERVER_URL="http://localhost:5100"
+dotnet run --project Client --launch-profile http
+```
+
+Ouvrir `http://localhost:5245`. Le profil HTTPS du client utilise `https://localhost:7219` et nécessite un certificat de développement approuvé.
+
+Le serveur expose `/ag-ui` et `/telemetry`. Le client utilise `AGUI_SERVER_URL` pour les deux connexions. Le bouton **Stop** annule la requête en cours ; quitter la page déclenche aussi l'annulation.
+
+## Paramètres et télémétrie
+
+Les paramètres invalides reviennent aux valeurs par défaut. Bornes serveur : température 0–2, top-p 0–1, top-k 1–1000, contexte 1024–131072 ; effort `low`, `medium` ou `high`. Ces bornes applicatives ne garantissent pas la capacité du modèle ou de la machine.
+
+Chaque circuit Blazor possède une connexion et un canal de télémétrie aléatoire, conservé lors des reconnexions SignalR. Le serveur publie seulement dans ce canal, sans diffusion globale. Ce mécanisme sépare les circuits ; il ne remplace pas une authentification utilisateur. Les métriques ne sont pas rejouées après une déconnexion. Une erreur de publication ne doit pas interrompre la réponse du modèle.
+
+Les paramètres communs se trouvent dans `appsettings*.json` et les profils locaux dans `Properties/launchSettings.json`. Conserver les secrets dans les variables d'environnement ou les user secrets .NET. La journalisation HTTP/SSE peut contenir les conversations : adapter son niveau et sa conservation avant une utilisation partagée.
+
+## Compilation et tests
+
+```powershell
+dotnet restore AGUIWebChat.slnx
+dotnet build AGUIWebChat.slnx --configuration Release --no-restore
+dotnet test AGUIWebChat.slnx --configuration Release --no-build
+```
+
+Les tests ne nécessitent pas Ollama. Ils couvrent notamment les paramètres invalides, le décodage SSE fragmenté, l'annulation et les erreurs de lecture. Le workflow `.github/workflows/ci.yml` exécute compilation et tests sur GitHub à chaque push et pull request.
+
+## Git
+
+`.gitignore` exclut les sorties .NET, les fichiers utilisateur Visual Studio et les logs. `.gitattributes` normalise les textes en LF et les scripts Windows en CRLF.
 
 ```powershell
 git status
 git add .
 git diff --cached
-git commit -m "Initial source import"
-```
-
-To connect an empty remote repository, replace `<repository-url>` with its URL:
-
-```powershell
-git remote add origin <repository-url>
-git push -u origin main
-```
-
-The `.gitattributes` file normalizes text line endings to LF, except Windows
-command scripts which use CRLF.
-
-### Azure OpenAI Configuration
-
-The server requires Azure OpenAI credentials. Set the following environment variables:
-
-```powershell
-$env:AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
-$env:AZURE_OPENAI_DEPLOYMENT_NAME="your-deployment-name"  # e.g., "gpt-5.4-mini"
-```
-
-The server uses `DefaultAzureCredential` for authentication. Ensure you are logged in using one of the following methods:
-
-- Azure CLI: `az login`
-- Azure PowerShell: `Connect-AzAccount`
-- Visual Studio or VS Code with Azure extensions
-- Environment variables with service principal credentials
-
-## Running the Sample
-
-### Step 1: Start the Server
-
-Open a terminal and navigate to the Server directory:
-
-```powershell
-cd Server
-dotnet run
-```
-
-The server will start on `http://localhost:5100` and expose the AG-UI endpoint at `/ag-ui`.
-
-### Step 2: Start the Client
-
-Open a new terminal and navigate to the Client directory:
-
-```powershell
-cd Client
-dotnet run
-```
-
-The client will start on `http://localhost:5000`. Open your browser and navigate to `http://localhost:5000` to access the chat interface.
-
-### Step 3: Chat with the Agent
-
-Type your message in the text box at the bottom of the page and press Enter or click the send button. The assistant will respond with streaming text that appears in real-time.
-
-Features:
-- **Streaming responses**: Watch the assistant's response appear word by word
-- **Conversation suggestions**: The assistant may offer follow-up questions after responding
-- **New chat**: Click the "New chat" button to start a fresh conversation
-- **Auto-scrolling**: The chat automatically scrolls to show new messages
-
-## How It Works
-
-### Server (AG-UI Host)
-
-The server (`Server/Program.cs`) creates a simple chat agent:
-
-```csharp
-// Create Azure OpenAI client
-AzureOpenAIClient azureOpenAIClient = new AzureOpenAIClient(
-    new Uri(endpoint),
-    new DefaultAzureCredential());
-
-ChatClient chatClient = azureOpenAIClient.GetChatClient(deploymentName);
-
-// Create AI agent
-ChatClientAgent agent = chatClient.AsAIAgent(
-    name: "ChatAssistant",
-    instructions: "You are a helpful assistant.");
-
-// Map AG-UI endpoint
-app.MapAGUI("/ag-ui", agent);
-```
-
-The server exposes the agent via the AG-UI protocol at `http://localhost:5100/ag-ui`.
-
-### Client (Blazor Web App)
-
-The client (`Client/Program.cs`) configures an `AGUIChatClient` to connect to the server:
-
-```csharp
-string serverUrl = builder.Configuration["AGUI_SERVER_URL"] ?? "http://localhost:5100";
-
-builder.Services.AddHttpClient("aguiserver", httpClient => httpClient.BaseAddress = new Uri(serverUrl));
-
-builder.Services.AddChatClient(sp => new AGUIChatClient(
-    sp.GetRequiredService<IHttpClientFactory>().CreateClient("aguiserver"), "ag-ui"));
-```
-
-The Blazor UI (`Client/Components/Pages/Chat/Chat.razor`) uses the `IChatClient` to:
-- Send user messages to the agent
-- Stream responses back in real-time
-- Maintain conversation history
-- Display messages with appropriate styling
-
-### UI Components
-
-The chat interface is built from several Blazor components:
-
-- **Chat.razor** - Main chat page coordinating the conversation flow
-- **ChatHeader.razor** - Header with "New chat" button
-- **ChatMessageList.razor** - Scrollable list of messages with auto-scroll
-- **ChatMessageItem.razor** - Individual message rendering (user vs assistant)
-- **ChatInput.razor** - Text input with auto-resize and keyboard shortcuts
-- **ChatSuggestions.razor** - AI-generated follow-up question suggestions
-- **LoadingSpinner.razor** - Animated loading indicator during streaming
-
-## Configuration
-
-### Server Configuration
-
-The server URL and port are configured in `Server/Properties/launchSettings.json`:
-
-```json
-{
-  "profiles": {
-    "http": {
-      "applicationUrl": "http://localhost:5100"
-    }
-  }
-}
-```
-
-### Client Configuration
-
-The client connects to the server URL specified in `Client/Properties/launchSettings.json`:
-
-```json
-{
-  "profiles": {
-    "http": {
-      "applicationUrl": "http://localhost:5000",
-      "environmentVariables": {
-        "AGUI_SERVER_URL": "http://localhost:5100"
-      }
-    }
-  }
-}
-```
-
-To change the server URL, modify the `AGUI_SERVER_URL` environment variable in the client's launch settings or provide it at runtime:
-
-```powershell
-$env:AGUI_SERVER_URL="http://your-server:5100"
-dotnet run
-```
-
-## Customization
-
-### Changing the Agent Instructions
-
-Edit the instructions in `Server/Program.cs`:
-
-```csharp
-ChatClientAgent agent = chatClient.AsAIAgent(
-    name: "ChatAssistant",
-    instructions: "You are a helpful coding assistant specializing in C# and .NET.");
-```
-
-### Styling the UI
-
-The chat interface uses CSS files colocated with each Razor component. Key styles:
-
-- `wwwroot/app.css` - Global styles, buttons, color scheme
-- `Components/Pages/Chat/Chat.razor.css` - Chat container layout
-- `Components/Pages/Chat/ChatMessageItem.razor.css` - Message bubbles and icons
-- `Components/Pages/Chat/ChatInput.razor.css` - Input box styling
-
-### Disabling Suggestions
-
-To disable the AI-generated follow-up suggestions, comment out the suggestions component in `Chat.razor`:
-
-```razor
-@* <ChatSuggestions OnSelected="@AddUserMessageAsync" @ref="@chatSuggestions" /> *@
+git commit -m "Describe the change"
 ```

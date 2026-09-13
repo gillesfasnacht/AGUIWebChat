@@ -1,4 +1,12 @@
 <Solution>
+  <Folder Name="/Client/" />
+  <Folder Name="/Contracts/">
+    <Project Path="Contracts/AGUIWebChat.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/Server/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/AGUIWebChat.Tests/AGUIWebChat.Tests.csproj" />
+  </Folder>
   <Project Path="Client/AGUIFluentUIChatClient.csproj" Id="43e7a1f4-08da-43c1-b4fb-39ac2e0d2bcc" />
   <Project Path="Server/AGUIWebChatServer.csproj" />
 </Solution>

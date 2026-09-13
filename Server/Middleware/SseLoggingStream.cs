@@ -1,6 +1,6 @@
-﻿using System.Text;
+using System.Text;
 
-namespace AGUIWebChatServer.Midleware
+namespace AGUIWebChatServer.Middleware
 {
     public sealed class SseLoggingStream : Stream
     {

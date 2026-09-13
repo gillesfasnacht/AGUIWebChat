@@ -22,4 +22,8 @@
   <ItemGroup>
     <Folder Include="Logs\" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Contracts\AGUIWebChat.Contracts.csproj" />
+  </ItemGroup>
 </Project>

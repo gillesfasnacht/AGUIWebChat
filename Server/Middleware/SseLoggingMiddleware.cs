@@ -1,4 +1,4 @@
-﻿namespace AGUIWebChatServer.Midleware
+namespace AGUIWebChatServer.Middleware
 {
     public sealed class SseLoggingMiddleware
     {

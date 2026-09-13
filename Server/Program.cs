@@ -1,9 +1,10 @@
 ﻿using AGUI.Abstractions;
 using AGUI.Server;
-using AGUIFluentUIChatClient.Midleware;
+using AGUIWebChatServer.Telemetry;
+using AGUIWebChatServer.Agents;
 using AGUIWebChatServer.Hubs;
 using AGUIWebChatServer.Inference;
-using AGUIWebChatServer.Midleware;
+using AGUIWebChatServer.Middleware;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.AspNetCore.HttpLogging;
@@ -79,7 +80,7 @@ using var enterpriseSupportTracerProvider = CreateTraceProviderConsole("Enterpri
 
 var telemetryHub = app.Services.GetRequiredService<IHubContext<TelemetryHub>>();
 
-AIAgent enterpriseAgent = CreateAgent(
+AIAgent enterpriseAgent = ChatAgentFactory.CreateAgent(
     ollamaApiClient,
     name: "EnterpriseSupportAgent",
     instruction: """
@@ -106,195 +107,6 @@ app.UseMiddleware<SseLoggingMiddleware>();
 app.MapAGUIServer("/ag-ui", enterpriseAgent);
 
 await app.RunAsync();
-
-static AIAgent CreateAgent(
-    IChatClient chatClient,
-    string name,
-    string instruction,
-    string source,
-    string modelName,
-    InferenceSettings defaultSettings,
-    IHubContext<TelemetryHub> telemetryHub)
-{
-    Log.Debug("SERVER AGENT_CREATION for {AgentName} with ActivitySource {ActivitySource}", name, source);
-
-    return chatClient
-        .AsAIAgent(
-            new ChatClientAgentOptions
-            {
-                Name = name,
-                ChatOptions = new ChatOptions
-                {
-                    Instructions = instruction,
-
-                    AdditionalProperties = new()
-                    {
-                        ["think"] = defaultSettings.ThinkingEffort,
-                        ["temperature"] = defaultSettings.Temperature,
-                        ["top_p"] = defaultSettings.TopP,
-                        ["top_k"] = defaultSettings.TopK,
-                        ["num_ctx"] = defaultSettings.NumCtx
-                    }
-                }
-            })
-        .AsBuilder()
-        .UseOpenTelemetry(sourceName: source)
-        .Use(runFunc: null,
-            runStreamingFunc:
-                (messages, session, options, innerAgent, cancellationToken) =>
-                {
-                    var effectiveSettings =
-                        GetInferenceSettings(
-                            options,
-                            defaultSettings);
-
-                    var effectiveOptions =
-                        ApplyInferenceSettings(
-                            options,
-                            effectiveSettings);
-
-                    Log.Information("SERVER INFERENCE_SETTINGS Agent={AgentName} Model={ModelName} Effort={ThinkingEffort} Temperature={Temperature} TopP={TopP} TopK={TopK} NumCtx={NumCtx}",
-                        name,
-                        modelName,
-                        effectiveSettings.ThinkingEffort,
-                        effectiveSettings.Temperature,
-                        effectiveSettings.TopP,
-                        effectiveSettings.TopK,
-                        effectiveSettings.NumCtx);
-
-                    string runId = string.Empty;
-
-                    if (effectiveOptions is ChatClientAgentRunOptions { ChatOptions: { } chatOptions } &&
-                        chatOptions.TryGetRunAgentInput(out RunAgentInput? input))
-                    {
-                        runId = input.RunId;
-                    }
-
-                    var reasoningStream =
-                       ReasoningTelemetry.ObserveAsync(
-                           messages,
-                           session,
-                           effectiveOptions,
-                           innerAgent,
-                           telemetryHub,
-                           runId,
-                           name,
-                           modelName,
-                           effectiveSettings.ThinkingEffort,
-                           cancellationToken);
-
-                    return LlmTelemetry.ObserveAsync(
-                        reasoningStream,
-                        telemetryHub,
-                        runId,
-                        name,
-                        modelName,
-                        cancellationToken);
-                })
-        .Build();
-}
-
-static InferenceSettings GetInferenceSettings(AgentRunOptions? options, InferenceSettings defaults)
-{
-    if (options is not ChatClientAgentRunOptions
-        {
-            ChatOptions: { } chatOptions
-        })
-    {
-        return defaults;
-    }
-
-    if (!chatOptions.TryGetRunAgentInput(out RunAgentInput? input))
-    {
-        return defaults;
-    }
-
-    if (input.State is not
-        {
-            ValueKind: JsonValueKind.Object
-        } state)
-    {
-        return defaults;
-    }
-
-    string thinkingEffort = defaults.ThinkingEffort;
-    double temperature = defaults.Temperature;
-    double topP = defaults.TopP;
-    int topK = defaults.TopK;
-    int numCtx = defaults.NumCtx;
-
-    if (state.TryGetProperty("thinkingEffort", out var thinkingElement))
-    {
-        thinkingEffort = thinkingElement.GetString()?.ToLowerInvariant() switch
-        {
-            "low" => "low",
-            "medium" => "medium",
-            "high" => "high",
-            _ => defaults.ThinkingEffort
-        };
-    }
-
-    if (state.TryGetProperty("temperature", out var temperatureElement) &&
-        temperatureElement.TryGetDouble(out var parsedTemperature) &&
-        parsedTemperature is >= 0 and <= 2)
-    {
-        temperature = parsedTemperature;
-    }
-
-    if (state.TryGetProperty("topP", out var topPElement) &&
-        topPElement.TryGetDouble(out var parsedTopP) &&
-        parsedTopP is >= 0 and <= 1)
-    {
-        topP = parsedTopP;
-    }
-
-    if (state.TryGetProperty("topK", out var topKElement) &&
-        topKElement.TryGetInt32(out var parsedTopK) &&
-        parsedTopK >= 1)
-    {
-        topK = parsedTopK;
-    }
-
-    if (state.TryGetProperty("numCtx", out var numCtxElement) &&
-        numCtxElement.TryGetInt32(out var parsedNumCtx) &&
-        parsedNumCtx >= 1024)
-    {
-        numCtx = parsedNumCtx;
-    }
-
-    return new InferenceSettings
-    {
-        ThinkingEffort = thinkingEffort,
-        Temperature = temperature,
-        TopP = topP,
-        TopK = topK,
-        NumCtx = numCtx
-    };
-}
-
-static AgentRunOptions ApplyInferenceSettings(AgentRunOptions? options, InferenceSettings settings)
-{
-    ChatClientAgentRunOptions runOptions;
-
-    if (options is ChatClientAgentRunOptions chatClientOptions)
-    {
-        runOptions = (ChatClientAgentRunOptions)chatClientOptions.Clone();
-    }
-    else
-    {
-        runOptions = new ChatClientAgentRunOptions();
-    }
-
-    runOptions.ChatOptions ??= new ChatOptions();
-    runOptions.ChatOptions.AdditionalProperties ??= new();
-    runOptions.ChatOptions.AdditionalProperties["think"] = settings.ThinkingEffort;
-    runOptions.ChatOptions.AdditionalProperties["temperature"] =  settings.Temperature;
-    runOptions.ChatOptions.AdditionalProperties["top_p"] = settings.TopP;
-    runOptions.ChatOptions.AdditionalProperties["top_k"] = settings.TopK;
-    runOptions.ChatOptions.AdditionalProperties["num_ctx"] = settings.NumCtx;
-
-    return runOptions;
-}
 
 static TracerProvider CreateTraceProviderConsole(params string[] sourceNames)
 {

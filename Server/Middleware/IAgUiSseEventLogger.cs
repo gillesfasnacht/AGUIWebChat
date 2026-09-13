@@ -1,4 +1,4 @@
-﻿namespace AGUIWebChatServer.Midleware
+namespace AGUIWebChatServer.Middleware
 {
     public interface IAgUiSseEventLogger
     {

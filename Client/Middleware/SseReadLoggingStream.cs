@@ -1,12 +1,11 @@
-﻿using System.Text;
+using System.Text;
 
-namespace AGUIFluentUIChatClient.Midleware
+namespace AGUIFluentUIChatClient.Middleware
 {
     public sealed class SseReadLoggingStream : Stream
     {
         private readonly Stream _inner;
         private readonly IAgUiClientSseEventLogger _eventLogger;
-        private readonly ILogger _logger;
 
         private readonly Decoder _decoder =
             Encoding.UTF8.GetDecoder();
@@ -215,9 +214,7 @@ namespace AGUIFluentUIChatClient.Midleware
 
                 if (!string.IsNullOrWhiteSpace(remaining))
                 {
-                    _logger.LogDebug(
-                        "AG-UI SSE remaining data: {SseEvent}",
-                        remaining);
+                    _eventLogger.LogEvent(remaining);
                 }
 
                 _textBuffer.Clear();

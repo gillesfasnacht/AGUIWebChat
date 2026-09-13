@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.HttpLogging;
 
-namespace AGUIWebChatServer.Midleware
+namespace AGUIWebChatServer.Middleware
 {
     public sealed class AgUiHttpLoggingInterceptor : IHttpLoggingInterceptor
     {
