@@ -1,6 +1,6 @@
 using System.Reflection;
-using AGUIWebChatServer.Hubs;
-using AGUIWebChatServer.Telemetry;
+using AGUIWebChat.Server.Hubs;
+using AGUIWebChat.Server.Telemetry;
 using Microsoft.AspNetCore.SignalR;
 using Xunit;
 

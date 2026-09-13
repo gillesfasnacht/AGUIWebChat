@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace AGUIFluentUIChatClient.Middleware
+namespace AGUIWebChat.Client.Middleware
 {
     public sealed class SseReadLoggingStream : Stream
     {

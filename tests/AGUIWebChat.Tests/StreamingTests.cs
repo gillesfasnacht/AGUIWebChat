@@ -1,5 +1,5 @@
 using System.Text;
-using AGUIFluentUIChatClient.Middleware;
+using AGUIWebChat.Client.Middleware;
 using Xunit;
 
 namespace AGUIWebChat.Tests;

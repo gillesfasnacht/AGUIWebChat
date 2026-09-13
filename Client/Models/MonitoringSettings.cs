@@ -1,4 +1,4 @@
-﻿namespace AGUIFluentUIChatClient.Models
+﻿namespace AGUIWebChat.Client.Models
 {
     public enum MonitoringDisplayMode
     {

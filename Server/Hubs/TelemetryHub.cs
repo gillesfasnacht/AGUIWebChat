@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 
-namespace AGUIWebChatServer.Hubs
+namespace AGUIWebChat.Server.Hubs
 {
     public sealed class TelemetryHub : Hub
     {

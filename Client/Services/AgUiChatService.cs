@@ -4,12 +4,12 @@ using System.Text.Json;
 using AGUI.Abstractions;
 using AGUI.Client;
 
-using AGUIFluentUIChatClient.Models;
+using AGUIWebChat.Client.Models;
 
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
-namespace AGUIFluentUIChatClient.Services;
+namespace AGUIWebChat.Client.Services;
 
 public sealed class AgUiChatService
 {

@@ -1,23 +1,16 @@
 using AGUI.Abstractions;
 using AGUI.Server;
-using AGUIWebChatServer.Telemetry;
-using AGUIWebChatServer.Hubs;
-using AGUIWebChatServer.Inference;
-using AGUIWebChatServer.Middleware;
+using AGUIWebChat.Server.Telemetry;
+using AGUIWebChat.Server.Hubs;
+using AGUIWebChat.Server.Inference;
 using Microsoft.Agents.AI;
-using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
-using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.AI;
-using OllamaSharp;
-using OpenTelemetry;
-using OpenTelemetry.Trace;
 using Serilog;
-using System.Diagnostics;
 using System.Text.Json;
 
 
-namespace AGUIWebChatServer.Agents;
+namespace AGUIWebChat.Server.Agents;
 
 internal static class ChatAgentFactory
 {

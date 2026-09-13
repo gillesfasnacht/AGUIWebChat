@@ -1,10 +1,8 @@
-﻿using AGUI.Abstractions;
-using AGUI.Server;
-using AGUIWebChatServer.Telemetry;
-using AGUIWebChatServer.Agents;
-using AGUIWebChatServer.Hubs;
-using AGUIWebChatServer.Inference;
-using AGUIWebChatServer.Middleware;
+﻿using AGUIWebChat.Server.Telemetry;
+using AGUIWebChat.Server.Agents;
+using AGUIWebChat.Server.Hubs;
+using AGUIWebChat.Server.Inference;
+using AGUIWebChat.Server.Middleware;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.AspNetCore.HttpLogging;
@@ -15,7 +13,6 @@ using OpenTelemetry;
 using OpenTelemetry.Trace;
 using Serilog;
 using System.Diagnostics;
-using System.Text.Json;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 

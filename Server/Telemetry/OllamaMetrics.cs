@@ -1,4 +1,4 @@
-﻿namespace AGUIWebChatServer.Telemetry
+﻿namespace AGUIWebChat.Server.Telemetry
 {
     public sealed record OllamaMetrics(
     long TotalDurationNs,

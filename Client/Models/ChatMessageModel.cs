@@ -1,6 +1,6 @@
-﻿using AGUIFluentUIChatClient.Services;
+﻿using AGUIWebChat.Client.Services;
 
-namespace AGUIFluentUIChatClient.Models
+namespace AGUIWebChat.Client.Models
 {
     public enum ChatRole
     {

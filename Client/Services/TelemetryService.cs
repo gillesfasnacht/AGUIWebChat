@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 
-namespace AGUIFluentUIChatClient.Services
+namespace AGUIWebChat.Client.Services
 {
     public sealed class TelemetryService : IAsyncDisposable
     {

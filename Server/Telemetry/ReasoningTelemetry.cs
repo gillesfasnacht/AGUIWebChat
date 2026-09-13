@@ -1,4 +1,4 @@
-using AGUIWebChatServer.Hubs;
+using AGUIWebChat.Server.Hubs;
 using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.AI;
@@ -6,15 +6,15 @@ using Serilog;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace AGUIWebChatServer.Telemetry
+namespace AGUIWebChat.Server.Telemetry
 {
     static class ReasoningTelemetry
     {
-        public const string ActivitySourceName = "AGUIWebChatServer.ReasoningTelemetry";
+        public const string ActivitySourceName = "AGUIWebChat.Server.ReasoningTelemetry";
 
         private static readonly ActivitySource ActivitySource = new(ActivitySourceName);
 
-        private static readonly Serilog.ILogger Logger = Log.ForContext("SourceContext", "AGUIWebChatServer.ReasoningTelemetry");
+        private static readonly Serilog.ILogger Logger = Log.ForContext("SourceContext", "AGUIWebChat.Server.ReasoningTelemetry");
 
         public static async IAsyncEnumerable<AgentResponseUpdate> ObserveAsync(
             IEnumerable<ChatMessage> messages,

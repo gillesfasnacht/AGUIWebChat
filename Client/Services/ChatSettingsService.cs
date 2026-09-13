@@ -1,8 +1,8 @@
-﻿using AGUIFluentUIChatClient.Models;
+﻿using AGUIWebChat.Client.Models;
 using Microsoft.JSInterop;
 using System.Text.Json;
 
-namespace AGUIFluentUIChatClient.Services
+namespace AGUIWebChat.Client.Services
 {
     public sealed class ChatSettingsService
     {

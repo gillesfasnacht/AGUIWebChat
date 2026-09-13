@@ -1,8 +1,8 @@
-using AGUIWebChatServer.Hubs;
+using AGUIWebChat.Server.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Serilog;
 
-namespace AGUIWebChatServer.Telemetry;
+namespace AGUIWebChat.Server.Telemetry;
 
 public static class TelemetryPublisher
 {

@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace AGUIFluentUIChatClient.Middleware
+namespace AGUIWebChat.Client.Middleware
 {
     public sealed class SseLoggingHttpContent : HttpContent
     {

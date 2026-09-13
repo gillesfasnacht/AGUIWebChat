@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 
-namespace AGUIWebChatServer.Middleware
+namespace AGUIWebChat.Server.Middleware
 {
     public sealed class AgUiSseEventLogger : IAgUiSseEventLogger
     {

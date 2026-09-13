@@ -1,4 +1,4 @@
-namespace AGUIFluentUIChatClient.Middleware
+namespace AGUIWebChat.Client.Middleware
 {
     public interface IAgUiClientSseEventLogger
     {

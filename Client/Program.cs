@@ -1,6 +1,6 @@
-﻿using AGUIFluentUIChatClient.Components;
-using AGUIFluentUIChatClient.Middleware;
-using AGUIFluentUIChatClient.Services;
+﻿using AGUIWebChat.Client.Components;
+using AGUIWebChat.Client.Middleware;
+using AGUIWebChat.Client.Services;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.FluentUI.AspNetCore.Components;
 using Serilog;

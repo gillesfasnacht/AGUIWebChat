@@ -1,5 +1,5 @@
 using System.Text.Json;
-using AGUIWebChatServer.Inference;
+using AGUIWebChat.Server.Inference;
 using Xunit;
 
 namespace AGUIWebChat.Tests;

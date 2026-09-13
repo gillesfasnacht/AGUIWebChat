@@ -1,4 +1,4 @@
-﻿namespace AGUIWebChatServer.Inference
+﻿namespace AGUIWebChat.Server.Inference
 {
     public sealed class InferenceSettings
     {

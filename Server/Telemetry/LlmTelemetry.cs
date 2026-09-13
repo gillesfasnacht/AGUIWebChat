@@ -1,6 +1,4 @@
-using AGUIWebChatServer.Hubs;
-using AGUIWebChatServer.Telemetry;
-
+using AGUIWebChat.Server.Hubs;
 using Microsoft.Agents.AI;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.AI;
@@ -12,11 +10,11 @@ using Serilog;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace AGUIWebChatServer.Telemetry
+namespace AGUIWebChat.Server.Telemetry
 {
     internal static class LlmTelemetry
     {
-        private static readonly Serilog.ILogger Logger = Log.ForContext("SourceContext", "AGUIWebChatServer.LlmTelemetry");
+        private static readonly Serilog.ILogger Logger = Log.ForContext("SourceContext", "AGUIWebChat.Server.Telemetry");
 
         public static async IAsyncEnumerable<AgentResponseUpdate> ObserveAsync(
             IAsyncEnumerable<AgentResponseUpdate> updates,
