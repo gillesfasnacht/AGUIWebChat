@@ -1,0 +1,65 @@
+﻿@using AGUIFluentUIChatClient.Models;
+@using Markdig
+@using Markdown.ColorCode;
+@using Microsoft.AspNetCore.Components
+
+<div class="message @RoleClass">
+
+    @if (!string.IsNullOrWhiteSpace(Message.Reasoning))
+    {
+        <ChatReasoning Content="@Message.Reasoning"
+                       DisplayMode="@ReasoningDisplay"
+                       DurationMs="@Message.ReasoningDurationMs" />
+
+        <ChatMonitoring Telemetry="@Message.MonitoringTelemetry"
+                        DisplayMode="@MonitoringDisplay"
+                        Settings="@MonitoringSettings" />
+    }
+
+    @if (Message.Role == ChatRole.Assistant)
+    {
+        <div class="message-content markdown-content">
+            @((MarkupString)Markdown.ToHtml(
+                Message.Content,
+                MarkdownPipeline))
+
+            @if (Message.IsStreaming)
+            {
+                <span class="streaming-cursor">▋</span>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="message-content">
+            @Message.Content
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public required ChatMessageModel Message { get; set; }
+
+    [Parameter]
+    public ReasoningDisplayMode ReasoningDisplay { get; set; }
+
+    [Parameter]
+    public MonitoringDisplayMode MonitoringDisplay { get; set; }
+
+    [Parameter, EditorRequired]
+    public required MonitoringSettings MonitoringSettings { get; set; }
+
+    private string RoleClass =>
+        Message.Role == ChatRole.User
+            ? "user-message"
+            : "assistant-message";
+
+    private static readonly MarkdownPipeline MarkdownPipeline =
+        new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .UseColorCode()
+            .DisableHtml()
+            .Build();
+}

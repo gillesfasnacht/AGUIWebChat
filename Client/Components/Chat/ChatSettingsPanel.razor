@@ -1,0 +1,185 @@
+﻿@using AGUIFluentUIChatClient.Models
+@using AGUIFluentUIChatClient.Services
+
+@inject ChatSettingsService SettingsService
+
+<FluentDialogBody>
+    <EditForm Model="@Settings" novalidate="true">
+        <DataAnnotationsValidator />
+        
+        <FluentDivider />
+
+        <br />
+        <h4 class="brand-text">Reasoning</h4>
+
+        <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
+
+            <FluentSelect TOption="ReasoningDisplayMode"
+                          TValue="ReasoningDisplayMode"
+                          Label="Reasoning display"
+                          Style="width: 100%;"
+                          @bind-Value="Settings.ReasoningDisplay">
+
+                @foreach (var mode in Enum.GetValues<ReasoningDisplayMode>())
+                {
+                    <FluentOption TOption="ReasoningDisplayMode"
+                                  TValue="ReasoningDisplayMode"
+                                  Value="@mode">
+                        @mode
+                    </FluentOption>
+                }
+
+            </FluentSelect>
+
+        </FluentStack>
+    
+        <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
+
+            <FluentSelect TOption="ThinkingEffort"
+                          TValue="ThinkingEffort"
+                          Label="Thinking effort"
+                          Style="width: 100%;"
+                          @bind-Value="Settings.ThinkingEffort">
+
+                @foreach (var effort in Enum.GetValues<ThinkingEffort>())
+                {
+                    <FluentOption TOption="ThinkingEffort"
+                                  TValue="ThinkingEffort"
+                                  Value="@effort">
+                        @effort
+                    </FluentOption>
+                }
+
+            </FluentSelect>
+
+        </FluentStack>
+
+        <br />
+        <h4 class="brand-text">Monitoring</h4>
+
+        <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
+
+            <FluentSelect TOption="MonitoringDisplayMode"
+                          TValue="MonitoringDisplayMode"
+                          Label="Monitoring display"
+                          Style="width: 100%;"
+                          @bind-Value="Settings.MonitoringDisplay">
+                @foreach (var mode in Enum.GetValues<MonitoringDisplayMode>())
+                {
+                    
+                    <FluentOption TOption="MonitoringDisplayMode"
+                                  TValue="MonitoringDisplayMode"
+                                  Value="@mode">
+                        @mode
+                    </FluentOption>
+
+                }
+            </FluentSelect>
+
+        </FluentStack>
+
+        <br />
+        <h4 class="brand-text">Sampling</h4>
+
+        <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
+
+            <FluentNumberInput TValue="double"
+                               Label="Temperature"
+                               Style="width: 100%;"
+                               @bind-Value="Settings.Temperature"
+                               Min="0"
+                               Max="2"
+                               Step="0.1" />
+
+        </FluentStack>
+
+        <div class="brand-text">
+            Controls the randomness of generated responses.
+        </div>
+
+        <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
+
+            <FluentNumberInput TValue="double"
+                               Label="Top P"
+                               Style="width: 100%;"
+                               @bind-Value="Settings.TopP"
+                               Min="0"
+                               Max="1"
+                               Step="0.05" />
+                           
+        </FluentStack>
+
+        <div class="brand-text">
+            Nucleus sampling probability threshold.
+        </div>
+
+        <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
+
+            <FluentNumberInput TValue="int"
+                               Label="Top K"
+                               Style="width: 100%;"
+                               @bind-Value="Settings.TopK"
+                               Min="1"
+                               Step="1" />
+
+        </FluentStack>
+
+        <div class="brand-text">
+            Number of candidate tokens considered during sampling.
+        </div>
+
+        <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
+
+            <FluentNumberInput TValue="int"
+                               Label="Context size"
+                               Style="width: 100%;"
+                               @bind-Value="Settings.NumCtx"
+                               Min="1024"
+                               Step="1024" />
+
+        </FluentStack>
+
+        <div class="brand-text">
+            Maximum model context window size.
+        </div>
+
+        <br />
+        <FluentDivider />
+        <br />
+
+        <FluentStack HorizontalGap="8px" Margin="@Margin.Top4">
+            <FluentButton Appearance="ButtonAppearance.Primary"
+                          Type="ButtonType.Reset"
+                          OnClick="ResetAsync"
+                          IconStart="@(new Icons.Regular.Size20.ArrowReset())">
+                Reset to defaults
+            </FluentButton>
+        </FluentStack>
+
+    </EditForm>
+    
+</FluentDialogBody>
+
+@code
+{
+    [CascadingParameter]
+    public IDialogInstance? DialogInstance { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (DialogInstance is not null)
+        {
+            DialogInstance.Options.Header.Title = "Settings";
+            DialogInstance.Options.Header.CloseAction.Visible = true;
+        }
+    }
+
+    private ChatSettings Settings => SettingsService.Settings;
+
+    private async Task ResetAsync()
+    {
+        await SettingsService.ResetAsync();
+
+        StateHasChanged();
+    }
+}

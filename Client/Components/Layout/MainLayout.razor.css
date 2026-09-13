@@ -1,0 +1,30 @@
+/* CSS for MainLayout component */
+.loading-settings {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    opacity: 0.65;
+}
+
+.main {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.content {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.chat-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}

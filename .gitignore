@@ -1,0 +1,33 @@
+# .NET build output
+[Bb]in/
+[Oo]bj/
+artifacts/
+publish/
+
+# Visual Studio and user-specific settings
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Runtime logs and test output
+[Ll]ogs/
+*.log
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.*.Local.json
+*.pfx
+*.p12
+
+# OS-generated files
+Thumbs.db
+.DS_Store

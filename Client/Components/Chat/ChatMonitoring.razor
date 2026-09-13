@@ -1,0 +1,209 @@
+﻿@using AGUIFluentUIChatClient.Models
+@using AGUIFluentUIChatClient.Services
+
+@if (DisplayMode != MonitoringDisplayMode.Hidden && Telemetry is not null)
+{
+    <div class="monitoring-container">
+
+        <FluentButton OnClick="Toggle">
+            @(Expanded ? "▼" : "▶")
+            Monitoring
+        </FluentButton>
+
+        @if (Expanded)
+        {
+            <div class="monitoring-content">
+
+                @if (Settings.ShowModelInfo)
+                {
+                    <div class="monitoring-model">
+                        <div>
+                            <span class="monitoring-model-label">Model</span>
+                            <strong>@Telemetry.Model</strong>
+                        </div>
+
+                        <div>
+                            <span class="monitoring-model-label">Agent</span>
+                            <strong>@Telemetry.AgentName</strong>
+                        </div>
+                    </div>
+                }
+
+                <div class="monitoring-summary">
+
+                    @if (Settings.ShowTokens)
+                    {
+                        <div class="monitoring-kpi">
+                            <div class="monitoring-kpi-value">
+                                @Telemetry.TotalTokens
+                            </div>
+                            <div class="monitoring-kpi-label">
+                                Total tokens
+                            </div>
+                        </div>
+                    }
+
+                    @if (Settings.ShowDurations)
+                    {
+                        <div class="monitoring-kpi">
+                            <div class="monitoring-kpi-value">
+                                @FormatDuration(Telemetry.RequestDurationMs)
+                            </div>
+                            <div class="monitoring-kpi-label">
+                                Server
+                            </div>
+                        </div>
+                    }
+
+                    @if (Settings.ShowThroughput)
+                    {
+                        <div class="monitoring-kpi">
+                            <div class="monitoring-kpi-value">
+                                @FormatRate(Telemetry.GenerationTokensPerSecond)
+                            </div>
+                            <div class="monitoring-kpi-label">
+                                Generation
+                            </div>
+                        </div>
+                    }
+
+                </div>
+
+                <div class="monitoring-details">
+
+                    @if (Settings.ShowTokens)
+                    {
+                        <section class="monitoring-section">
+                            <div class="monitoring-section-title">
+                                Tokens
+                            </div>
+
+                            <MetricRow Label="Input"
+                                       Value="@Telemetry.InputTokens.ToString()" />
+
+                            <MetricRow Label="Output"
+                                       Value="@Telemetry.OutputTokens.ToString()" />
+
+                            <MetricRow Label="Total"
+                                       Value="@Telemetry.TotalTokens.ToString()" />
+                        </section>
+                    }
+
+                    @if (Settings.ShowDurations)
+                    {
+                        <section class="monitoring-section">
+                            <div class="monitoring-section-title">
+                                Durations
+                            </div>
+
+                            <MetricRow Label="Server"
+                                       Value="@FormatDuration(Telemetry.RequestDurationMs)" />
+
+                            <MetricRow Label="Ollama"
+                                       Value="@FormatDuration(Telemetry.OllamaTotalDurationMs)" />
+
+                            <MetricRow Label="Model load"
+                                       Value="@FormatDuration(Telemetry.LoadDurationMs)" />
+
+                            <MetricRow Label="Prompt eval"
+                                       Value="@FormatDuration(Telemetry.PromptEvalDurationMs)" />
+
+                            <MetricRow Label="Generation"
+                                       Value="@FormatDuration(Telemetry.EvalDurationMs)" />
+                        </section>
+                    }
+
+                    @if (Settings.ShowThroughput)
+                    {
+                        <section class="monitoring-section">
+                            <div class="monitoring-section-title">
+                                Throughput
+                            </div>
+
+                            <MetricRow Label="Prompt"
+                                       Value="@FormatRate(Telemetry.PromptTokensPerSecond)" />
+
+                            <MetricRow Label="Generation"
+                                       Value="@FormatRate(Telemetry.GenerationTokensPerSecond)" />
+
+                            <MetricRow Label="Server"
+                                       Value="@FormatRate(Telemetry.EndToEndTokensPerSecond)" />
+                        </section>
+                    }
+
+                </div>
+
+                @if (Settings.ShowAdvancedMetrics)
+                {
+                    <div class="monitoring-advanced">
+
+                        <div class="monitoring-section-title">
+                            Advanced
+                        </div>
+
+                        <MetricRow Label="Server overhead"
+                                   Value="@FormatDuration(ServerOverheadMs)" />
+
+                        <MetricRow Label="Run ID"
+                                   Value="@Telemetry.RunId" />
+
+                    </div>
+                }
+
+            </div>
+        }
+    </div>
+}
+
+@code
+{
+    [Parameter, EditorRequired]
+    public required LlmTelemetryDto? Telemetry { get; set; }
+
+    [Parameter]
+    public MonitoringDisplayMode DisplayMode { get; set; }
+
+    [Parameter, EditorRequired]
+    public required MonitoringSettings Settings { get; set; }
+
+    private bool Expanded;
+
+    private MonitoringDisplayMode? PreviousDisplayMode;
+
+    private double? ServerOverheadMs =>
+        Telemetry?.OllamaTotalDurationMs is double ollama
+            ? Math.Max(0, Telemetry.RequestDurationMs - ollama)
+            : null;
+
+    protected override void OnParametersSet()
+    {
+        if (PreviousDisplayMode != DisplayMode)
+        {
+            Expanded = DisplayMode == MonitoringDisplayMode.Expanded;
+
+            PreviousDisplayMode = DisplayMode;
+        }
+    }
+
+    private void Toggle()
+    {
+        Expanded = !Expanded;
+    }
+
+    private static string FormatDuration(double? durationMs)
+    {
+        if (!durationMs.HasValue)
+            return "-";
+
+        return durationMs.Value < 1000
+            ? $"{durationMs.Value:F0} ms"
+            : $"{durationMs.Value / 1000:F2} s";
+    }
+
+    private static string FormatRate(double? value)
+    {
+        return value.HasValue
+            ? $"{value.Value:F1} tok/s"
+            : "-";
+    }
+}

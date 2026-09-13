@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Client/AGUIFluentUIChatClient.csproj" Id="43e7a1f4-08da-43c1-b4fb-39ac2e0d2bcc" />
+  <Project Path="Server/AGUIWebChatServer.csproj" />
+</Solution>

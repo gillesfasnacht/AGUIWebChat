@@ -1,0 +1,291 @@
+﻿@page "/chat"
+
+@inject IDialogService DialogService
+@implements IDisposable
+
+@using AGUI.Abstractions
+@using AGUIFluentUIChatClient.Components.Chat
+@using AGUIFluentUIChatClient.Models
+@using AGUIFluentUIChatClient.Services
+@using ChatRoleModel = AGUIFluentUIChatClient.Models.ChatRole
+@using Microsoft.Agents.AI
+
+@inject ChatSettingsService SettingsService
+@inject AgUiChatService AgUiChatService
+@inject TelemetryService TelemetryService
+
+<div class="chat-page">
+
+    @* ============================================================
+       Header
+       ============================================================ *@
+
+    <header class="chat-header">
+
+        <div class="chat-title">
+
+            <h4 class="brand-text">.NET Assistant</h4>
+
+            <div class="chat-model-info">
+                <span>
+                    Thinking: @Settings.ThinkingEffort
+                </span>
+            </div>
+
+        </div>
+
+        <FluentButton Appearance="ButtonAppearance.Primary"
+                      IconStart="@(new Icons.Regular.Size20.Settings())"
+                      OnClick="OpenSettingsAsync">
+            Settings
+        </FluentButton>
+
+    </header>
+
+    @* ============================================================
+       Messages
+       ============================================================ *@
+
+    <main class="chat-content">
+
+        @foreach (var message in Messages)
+        {
+            <ChatMessage Message="@message"
+                         ReasoningDisplay="@Settings.ReasoningDisplay"
+                         MonitoringDisplay="@Settings.MonitoringDisplay"
+                         MonitoringSettings="@Settings.Monitoring" />
+        }
+
+    </main>
+
+    @* ============================================================
+       Input
+       ============================================================ *@
+
+    <footer class="chat-input-area">
+
+        <div class="chat-input-container">
+
+            <FluentTextArea @bind-Value="InputText"
+                            Placeholder="Ask something..."
+                            Rows="4"
+                            Disabled="@IsSending"
+                            Style="width: 100%;"
+                            Class="chat-input" />
+
+            <FluentButton Size="ButtonSize.Large"
+                          Appearance="ButtonAppearance.Primary"
+                          IconStart="@(new Icons.Regular.Size20.Send())"
+                          Disabled="@IsSending"
+                          OnClick="SendAsync"
+                          Class="send-button">
+                          @(IsSending ? "Sending..." : "Send")
+            </FluentButton>
+
+        </div>
+
+    </footer>
+
+</div>
+
+@code
+{
+    private ChatMessageModel? _currentAssistantMessage;
+
+    private string? InputText;
+
+    private bool IsSending;
+
+    // =============================================================
+    // Settings
+    // =============================================================
+
+    private ChatSettings Settings =>
+        SettingsService.Settings;
+
+    // =============================================================
+    // Messages
+    // =============================================================
+
+    private List<ChatMessageModel> Messages { get; } = new();
+
+    // =============================================================
+    // Settings drawer
+    // =============================================================
+
+    private async Task OpenSettingsAsync()
+    {
+        await DialogService.ShowDrawerAsync<ChatSettingsPanel>(
+            options =>
+            {
+                options.Width = "380px";
+            });
+
+        await SettingsService.SaveAsync();
+    }
+
+    // =============================================================
+    // Send message
+    // =============================================================
+
+    private async Task SendAsync()
+    {
+        if (IsSending ||
+            string.IsNullOrWhiteSpace(InputText))
+        {
+            return;
+        }
+
+        // ---------------------------------------------------------
+        // User message
+        // ---------------------------------------------------------
+
+        var userText = InputText.Trim();
+
+        InputText = string.Empty;
+
+        var userMessage = new ChatMessageModel
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Role = ChatRoleModel.User,
+            Content = userText
+        };
+
+        Messages.Add(userMessage);
+
+        // ---------------------------------------------------------
+        // Assistant message
+        //
+        // We create it immediately because its Content will be
+        // progressively filled by the AG-UI stream.
+        // ---------------------------------------------------------
+
+        var assistantMessage = new ChatMessageModel
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Role = ChatRoleModel.Assistant,
+            Content = string.Empty,
+            IsStreaming = true,
+
+            
+        };
+
+        _currentAssistantMessage = assistantMessage;
+
+        Messages.Add(assistantMessage);
+
+        // ---------------------------------------------------------
+        // Start streaming
+        // ---------------------------------------------------------
+
+        IsSending = true;
+
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await foreach (var update in AgUiChatService.SendAsync(userText, Settings))
+            {
+                var hasChanged = false;
+
+                var chatUpdate = update.AsChatResponseUpdate();
+
+                // ---------------------------------------------------------
+                // Reasoning
+                // ---------------------------------------------------------
+
+                if (chatUpdate.RawRepresentation is ReasoningMessageContentEvent reasoning)
+                {
+                    assistantMessage.Reasoning ??= string.Empty;
+                    assistantMessage.Reasoning += reasoning.Delta;
+
+                    hasChanged = true;
+                }
+
+                // ---------------------------------------------------------
+                // Final text
+                // ---------------------------------------------------------
+
+                if (!string.IsNullOrEmpty(update.Text))
+                {
+                    assistantMessage.Content += update.Text;
+
+                    hasChanged = true;
+                }
+
+                if (hasChanged)
+                {
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancellation support will be added later.
+        }
+        catch (Exception ex)
+        {
+            assistantMessage.Content += $"\n\nError: {ex.Message}";
+        }
+        finally
+        {
+            assistantMessage.IsStreaming = false;
+
+            IsSending = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AgUiChatService.RunStarted += OnRunStarted;
+        TelemetryService.ReasoningCompleted += OnReasoningCompleted;
+        TelemetryService.LlmMetricsCompleted += OnLlmMetricsCompleted;
+
+        await TelemetryService.StartAsync();
+    }
+
+    private async void OnReasoningCompleted(ReasoningTelemetryDto telemetry)
+    {
+        var message = Messages.FirstOrDefault(
+            m => m.RunId == telemetry.RunId);
+
+        if (message is null)
+            return;
+
+        message.ReasoningDurationMs = telemetry.DurationMs;
+        message.ReasoningChunkCount = telemetry.ChunkCount;
+        message.ReasoningCharacterCount = telemetry.CharacterCount;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnLlmMetricsCompleted(LlmTelemetryDto telemetry)
+    {
+        var message = Messages.FirstOrDefault(
+            m => m.RunId == telemetry.RunId);
+
+        if (message is null)
+            return;
+
+        message.MonitoringTelemetry = telemetry;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        AgUiChatService.RunStarted -= OnRunStarted;
+        TelemetryService.ReasoningCompleted -= OnReasoningCompleted;
+        TelemetryService.LlmMetricsCompleted -= OnLlmMetricsCompleted;
+    }
+
+    private void OnRunStarted(string runId)
+    {
+        if (_currentAssistantMessage is not null)
+        {
+            _currentAssistantMessage.RunId = runId;
+        }
+    }
+}

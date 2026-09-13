@@ -1,0 +1,4 @@
+/* CSS for ChatSettingsPanel component */
+.brand-text {
+    color: var(--colorBrandForeground1);
+}

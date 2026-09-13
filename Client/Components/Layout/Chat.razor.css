@@ -1,0 +1,123 @@
+/* CSS for Chat component */
+
+
+/* ============================================================
+   Chat page
+   ============================================================ */
+
+.chat-page {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ============================================================
+   Header
+   ============================================================ */
+
+.chat-header {
+    min-height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+}
+
+.chat-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+    .chat-title h2 {
+        margin: 0;
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+.chat-model-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    opacity: 0.65;
+}
+
+.separator {
+    opacity: 0.65;
+}
+
+
+/* ============================================================
+   Conversation
+   ============================================================ */
+
+.chat-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 32px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+
+/* ============================================================
+   Input
+   ============================================================ */
+
+.chat-input-area {
+    width: 100%;
+    padding: 20px 24px 24px;
+    box-sizing: border-box;
+}
+
+.chat-input-container {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+}
+
+.chat-input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+}
+
+.send-button {
+    flex: 0 0 auto;
+    min-width: 90px;
+}
+
+
+/* ============================================================
+   Mobile
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    .chat-content {
+        padding: 20px 16px;
+    }
+
+    .chat-input-area {
+        padding: 12px 16px 16px;
+    }
+
+}
+
+
+/* ============================================================
+   Brand text
+   ============================================================ */
+
+.brand-text {
+    color: var(--colorBrandForeground1);
+}

@@ -1,0 +1,61 @@
+﻿@using AGUIFluentUIChatClient.Models
+
+@if (DisplayMode != ReasoningDisplayMode.Hidden &&
+     !string.IsNullOrWhiteSpace(Content))
+{
+    <div class="reasoning-container">
+
+        <FluentButton OnClick="Toggle">
+            @(Expanded ? "▼" : "▶")
+            @(DurationMs.HasValue
+                ? $"Reasoning · {FormatDuration(DurationMs.Value)}"
+                : "Reasoning")
+        </FluentButton>
+
+        @if (Expanded)
+        {
+            <div class="reasoning-content">
+                @Content
+            </div>
+        }
+
+    </div>
+}
+
+@code
+{
+    [Parameter]
+    public string? Content { get; set; }
+
+    [Parameter]
+    public double? DurationMs { get; set; }
+
+    [Parameter]
+    public ReasoningDisplayMode DisplayMode { get; set; }
+
+    private bool Expanded;
+    private ReasoningDisplayMode? PreviousDisplayMode;
+
+    protected override void OnParametersSet()
+    {
+        if (PreviousDisplayMode != DisplayMode)
+        {
+            Expanded =
+                DisplayMode == ReasoningDisplayMode.Expanded;
+
+            PreviousDisplayMode = DisplayMode;
+        }
+    }
+
+    private void Toggle()
+    {
+        Expanded = !Expanded;
+    }
+
+    private static string FormatDuration(double durationMs)
+    {
+        return durationMs < 1000
+            ? $"{durationMs:F0} ms"
+            : $"{durationMs / 1000:F1} s";
+    }
+}

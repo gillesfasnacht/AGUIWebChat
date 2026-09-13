@@ -1,0 +1,123 @@
+/* CSS for ChatMessage component */
+
+.message {
+    margin-bottom: 24px;
+}
+
+/* ============================================================
+   Content
+   ============================================================ */
+
+.message-content {
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   User
+   ============================================================ */
+
+.user-message {
+    margin-left: 20%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+    .user-message .message-content {
+        max-width: 80%;
+        padding: 12px 16px;
+        border-radius: 16px 16px 4px 16px;
+        background-color: var(--colorBrandBackground);
+        color: var(--colorNeutralForegroundOnBrand);
+        box-sizing: border-box;
+    }
+
+/* ============================================================
+   Assistant
+   ============================================================ */
+
+.assistant-message {
+    margin-right: 12%;
+}
+
+/* ============================================================
+   Streaming
+   ============================================================ */
+
+.streaming-cursor {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+/* ============================================================
+   Markdown
+   ============================================================ */
+
+.markdown-content ::deep h1,
+.markdown-content ::deep h2,
+.markdown-content ::deep h3 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.markdown-content ::deep p {
+    margin-top: 0;
+    margin-bottom: 12px;
+}
+
+.markdown-content ::deep ul,
+.markdown-content ::deep ol {
+    padding-left: 24px;
+    margin-bottom: 12px;
+}
+
+.markdown-content ::deep blockquote {
+    margin-left: 0;
+    padding-left: 14px;
+    border-left: 3px solid currentColor;
+    opacity: 0.8;
+}
+
+/* ============================================================
+   Code blocks
+   ============================================================ */
+
+.markdown-content ::deep pre {
+    margin: 16px 0;
+    padding: 16px 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    font-size: 1.05rem !important;
+    line-height: 1.6;
+    background-color: var(--code-background);
+    color: var(--code-foreground);
+    box-sizing: border-box;
+}
+
+    .markdown-content ::deep pre * {
+        font-size: inherit !important;
+        line-height: inherit;
+    }
+
+    .markdown-content ::deep pre code {
+        display: block;
+        margin: 0;
+        padding: 0;
+        font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+        line-height: 1.5;
+        background: transparent;
+    }
+
+.markdown-content ::deep :not(pre) > code {
+    padding: 2px 6px;
+    background-color: transparent;
+    font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+    font-size: 1.05rem;
+}
