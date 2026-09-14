@@ -1,3 +1,4 @@
+using AGUIWebChat.Middleware;
 using System.Net;
 
 namespace AGUIWebChat.Client.Middleware
@@ -5,32 +6,25 @@ namespace AGUIWebChat.Client.Middleware
     public sealed class SseLoggingHttpContent : HttpContent
     {
         private readonly HttpContent _inner;
-        private readonly IAgUiClientSseEventLogger _eventLogger;
+        private readonly IAgUiSseEventLogger _eventLogger;
 
-        public SseLoggingHttpContent(
-            HttpContent inner,
-            IAgUiClientSseEventLogger eventLogger)
+        public SseLoggingHttpContent(HttpContent inner, IAgUiSseEventLogger eventLogger)
         {
             _inner = inner;
             _eventLogger = eventLogger;
 
             foreach (var header in inner.Headers)
             {
-                Headers.TryAddWithoutValidation(
-                    header.Key,
-                    header.Value);
+                Headers.TryAddWithoutValidation(header.Key, header.Value);
             }
         }
 
         protected override async Task<Stream>
             CreateContentReadStreamAsync()
         {
-            Stream stream =
-                await _inner.ReadAsStreamAsync();
+            Stream stream = await _inner.ReadAsStreamAsync();
 
-            return new SseReadLoggingStream(
-                stream,
-                _eventLogger);
+            return new SseReadLoggingStream(stream, _eventLogger);
         }
 
         protected override async Task SerializeToStreamAsync(

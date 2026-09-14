@@ -1,6 +1,7 @@
 <Solution>
     <Project Path="Client/AGUIWebChat.Client.csproj" />
     <Project Path="Contracts/AGUIWebChat.Contracts.csproj" />
-    <Project Path="Tests/AGUIWebChat.Tests/AGUIWebChat.Tests.csproj" />
+    <Project Path="Middleware/AGUIWebChat.Middleware.csproj" />
     <Project Path="Server/AGUIWebChat.Server.csproj" />
+    <Project Path="Tests/AGUIWebChat.Tests/AGUIWebChat.Tests.csproj" />
 </Solution>

@@ -7,7 +7,8 @@ Application de chat Blazor Server (.NET 10), avec Fluent UI, un agent Ollama exp
 - `Client/Components/Pages/Chat.razor` : page de chat et annulation des réponses.
 - `Client/Components/Chat/` : messages, réglages, raisonnement et métriques.
 - `Client/Services/` : échanges AG-UI, paramètres et connexion SignalR par circuit.
-- `Client/Middleware/` et `Server/Middleware/` : interception HTTP et SSE.
+- `Middleware/` : bibliothèque `AGUIWebChat.Middleware` partagée (interface de journalisation, logger AG-UI, décodeur SSE UTF-8, flux de lecture et d'écriture).
+- `Client/Middleware/` et `Server/Middleware/` : intégrations HTTP propres à chaque application et adaptateurs conservant les catégories de logs existantes.
 - `Server/Agents/ChatAgentFactory.cs` : création et instrumentation de l'agent.
 - `Server/Inference/` : paramètres d'inférence et validation.
 - `Server/Telemetry/` : observation des réponses et publication des métriques.

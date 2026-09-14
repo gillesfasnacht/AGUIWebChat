@@ -13,4 +13,7 @@
     <ProjectReference Include="..\..\Client\AGUIWebChat.Client.csproj" />
     <ProjectReference Include="..\..\Server\AGUIWebChat.Server.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Middleware\AGUIWebChat.Middleware.csproj" />
+  </ItemGroup>
 </Project>

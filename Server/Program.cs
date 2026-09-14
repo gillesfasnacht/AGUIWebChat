@@ -1,4 +1,5 @@
-﻿using AGUIWebChat.Server.Telemetry;
+using AGUIWebChat.Middleware;
+using AGUIWebChat.Server.Telemetry;
 using AGUIWebChat.Server.Agents;
 using AGUIWebChat.Server.Hubs;
 using AGUIWebChat.Server.Inference;
@@ -65,7 +66,7 @@ Log.Information("Process Id : {ProcessId}", Process.GetCurrentProcess().Id);
 Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
 builder.Services.AddHttpLoggingInterceptor<AgUiHttpLoggingInterceptor>();
-builder.Services.AddSingleton<IAgUiSseEventLogger, AgUiSseEventLogger>();
+builder.Services.AddSingleton<IAgUiSseEventLogger, AGUIWebChat.Server.Middleware.AgUiSseEventLogger>();
 
 // Ajouter les services AG-UI pour la gestion du protocole
 builder.Services.AddAGUIServer();

@@ -1,4 +1,5 @@
-﻿using AGUIWebChat.Client.Components;
+using AGUIWebChat.Middleware;
+using AGUIWebChat.Client.Components;
 using AGUIWebChat.Client.Middleware;
 using AGUIWebChat.Client.Services;
 using Microsoft.AspNetCore.HttpLogging;
@@ -40,7 +41,7 @@ builder.Services.AddFluentUIComponents();
 builder.Services.AddScoped(_ => new TelemetryService(new Uri(new Uri(serverUrl), "/telemetry").ToString()));
 
 // AG-UI client SSE event logger
-builder.Services.AddSingleton<IAgUiClientSseEventLogger, AgUiClientSseEventLogger>();
+builder.Services.AddSingleton<IAgUiSseEventLogger, AgUiClientSseEventLogger>();
 builder.Services.AddTransient<AgUiHttpLoggingHandler>();
 builder.Services.AddScoped<ChatSettingsService>();
 builder.Services.AddHttpClient<AgUiChatService>(client =>

@@ -1,62 +1,24 @@
-using System.Text;
 
-namespace AGUIWebChat.Server.Middleware
+
+namespace AGUIWebChat.Middleware
 {
     public sealed class SseLoggingStream : Stream
     {
         private readonly Stream _inner;
-        private readonly IAgUiSseEventLogger _eventLogger;
-        private readonly StringBuilder _buffer = new();
+        private readonly SseEventDecoder _decoder;
+
 
         public SseLoggingStream(Stream inner, IAgUiSseEventLogger eventLogger)
         {
             _inner = inner;
-            _eventLogger = eventLogger;
-        }
-
-        private void Capture(ReadOnlySpan<byte> buffer)
-        {
-            string text =
-                Encoding.UTF8.GetString(buffer);
-
-            _buffer.Append(text);
-
-            ProcessBuffer();
-        }
-
-        private void ProcessBuffer()
-        {
-            while (true)
-            {
-                string content = _buffer.ToString();
-
-                int separatorIndex =
-                    content.IndexOf(
-                        "\n\n",
-                        StringComparison.Ordinal);
-
-                if (separatorIndex < 0)
-                    return;
-
-                string sseEvent =
-                    content[..separatorIndex];
-
-                _buffer.Remove(
-                    0,
-                    separatorIndex + 2);
-
-                if (!string.IsNullOrWhiteSpace(sseEvent))
-                {
-                    _eventLogger.LogEvent(sseEvent);
-                }
-            }
+            _decoder = new SseEventDecoder(eventLogger);
         }
 
         public override async ValueTask WriteAsync(
             ReadOnlyMemory<byte> buffer,
             CancellationToken cancellationToken = default)
         {
-            Capture(buffer.Span);
+            _decoder.Capture(buffer.Span);
 
             await _inner.WriteAsync(
                 buffer,
@@ -69,7 +31,7 @@ namespace AGUIWebChat.Server.Middleware
             int count,
             CancellationToken cancellationToken)
         {
-            Capture(buffer.AsSpan(offset, count));
+            _decoder.Capture(buffer.AsSpan(offset, count));
 
             await _inner.WriteAsync(
                 buffer,
@@ -83,7 +45,7 @@ namespace AGUIWebChat.Server.Middleware
             int offset,
             int count)
         {
-            Capture(buffer.AsSpan(offset, count));
+            _decoder.Capture(buffer.AsSpan(offset, count));
 
             _inner.Write(buffer, offset, count);
         }

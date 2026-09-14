@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Contracts\AGUIWebChat.Contracts.csproj" />
+    <ProjectReference Include="..\Middleware\AGUIWebChat.Middleware.csproj" />
   </ItemGroup>
 	
 </Project>

@@ -1,3 +1,4 @@
+using AGUIWebChat.Middleware;
 namespace AGUIWebChat.Server.Middleware
 {
     public sealed class SseLoggingMiddleware
