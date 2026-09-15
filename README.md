@@ -1,26 +1,26 @@
 # AGUI WebChat
 
-Application de chat Blazor Server (.NET 10), avec Fluent UI, un agent Ollama exposé via AG-UI et une télémétrie SignalR.
+A Blazor Server (.NET 10) chat application featuring Fluent UI, an Ollama agent exposed through AG-UI, and SignalR telemetry.
 
-## Structure
+## Project Structure
 
-- `Client/Components/Pages/Chat.razor` : page de chat et annulation des réponses.
-- `Client/Components/Chat/` : messages, réglages, raisonnement et métriques.
-- `Client/Services/` : échanges AG-UI, paramètres et connexion SignalR par circuit.
-- `Middleware/` : bibliothèque `AGUIWebChat.Middleware` partagée (interface de journalisation, logger AG-UI, décodeur SSE UTF-8, flux de lecture et d'écriture).
-- `Client/Middleware/` et `Server/Middleware/` : intégrations HTTP propres à chaque application et adaptateurs conservant les catégories de logs existantes.
-- `Server/Agents/ChatAgentFactory.cs` : création et instrumentation de l'agent.
-- `Server/Inference/` : paramètres d'inférence et validation.
-- `Server/Telemetry/` : observation des réponses et publication des métriques.
-- `Server/Hubs/` : connexion SignalR.
-- `Contracts/` : DTO partagés entre serveur et client.
-- `tests/AGUIWebChat.Tests/` : tests automatisés.
+- `Client/Components/Pages/Chat.razor`: chat page and response cancellation.
+- `Client/Components/Chat/`: messages, settings, reasoning, and metrics.
+- `Client/Services/`: AG-UI communication, settings, and a SignalR connection per circuit.
+- `Middleware/`: shared `AGUIWebChat.Middleware` library (logging interface, AG-UI event logger, UTF-8 SSE decoder, and read/write streams).
+- `Client/Middleware/` and `Server/Middleware/`: application-specific HTTP integrations and adapters that preserve existing logging categories.
+- `Server/Agents/ChatAgentFactory.cs`: agent creation and instrumentation.
+- `Server/Inference/`: inference settings and validation.
+- `Server/Telemetry/`: response monitoring and metrics publication.
+- `Server/Hubs/`: SignalR connection handling.
+- `Contracts/`: DTOs shared by the server and client.
+- `tests/AGUIWebChat.Tests/`: automated tests.
 
-## Démarrage
+## Getting Started
 
-Installer le SDK .NET 10 et disposer d'un serveur Ollama accessible avec le modèle choisi déjà installé.
+Install the .NET 10 SDK and ensure an Ollama server is accessible with your chosen model already installed.
 
-Dans un premier terminal PowerShell :
+In the first PowerShell terminal:
 
 ```powershell
 $env:OLLAMA_ENDPOINT="http://localhost:11434"
@@ -28,28 +28,28 @@ $env:OLLAMA_MODEL="granite4.2:8b"
 dotnet run --project Server --launch-profile http
 ```
 
-`OLLAMA_ENDPOINT` est obligatoire ; `OLLAMA_MODEL` utilise `granite4.2:8b` par défaut. Choisir un modèle compatible avec les paramètres de raisonnement utilisés.
+`OLLAMA_ENDPOINT` is required. `OLLAMA_MODEL` defaults to `granite4.2:8b`. Choose a model that supports the reasoning settings you use.
 
-Dans un second terminal :
+In a second terminal:
 
 ```powershell
 $env:AGUI_SERVER_URL="http://localhost:5100"
 dotnet run --project Client --launch-profile http
 ```
 
-Ouvrir `http://localhost:5245`. Le profil HTTPS du client utilise `https://localhost:7219` et nécessite un certificat de développement approuvé.
+Open `http://localhost:5245`. The client's HTTPS profile uses `https://localhost:7219` and requires a trusted development certificate.
 
-Le serveur expose `/ag-ui` et `/telemetry`. Le client utilise `AGUI_SERVER_URL` pour les deux connexions. Le bouton **Stop** annule la requête en cours ; quitter la page déclenche aussi l'annulation.
+The server exposes `/ag-ui` and `/telemetry`. The client uses `AGUI_SERVER_URL` for both connections. The **Stop** button cancels the current request; leaving the page also triggers cancellation.
 
-## Paramètres et télémétrie
+## Settings and Telemetry
 
-Les paramètres invalides reviennent aux valeurs par défaut. Bornes serveur : température 0–2, top-p 0–1, top-k 1–1000, contexte 1024–131072 ; effort `low`, `medium` ou `high`. Ces bornes applicatives ne garantissent pas la capacité du modèle ou de la machine.
+Invalid settings fall back to their default values. Server-side limits are: temperature 0–2, top-p 0–1, top-k 1–1000, context size 1024–131072, and reasoning effort `low`, `medium`, or `high`. These application limits do not guarantee that the model or hardware can support the selected values.
 
-Chaque circuit Blazor possède une connexion et un canal de télémétrie aléatoire, conservé lors des reconnexions SignalR. Le serveur publie seulement dans ce canal, sans diffusion globale. Ce mécanisme sépare les circuits ; il ne remplace pas une authentification utilisateur. Les métriques ne sont pas rejouées après une déconnexion. Une erreur de publication ne doit pas interrompre la réponse du modèle.
+Each Blazor circuit has its own connection and randomly generated telemetry channel, which is retained across SignalR reconnections. The server publishes only to that channel, without broadcasting to all clients. This mechanism separates circuits; it does not replace user authentication. Metrics are not replayed after a disconnection. A publication failure must not interrupt the model's response.
 
-Les paramètres communs se trouvent dans `appsettings*.json` et les profils locaux dans `Properties/launchSettings.json`. Conserver les secrets dans les variables d'environnement ou les user secrets .NET. La journalisation HTTP/SSE peut contenir les conversations : adapter son niveau et sa conservation avant une utilisation partagée.
+Common settings are stored in `appsettings*.json`, and local launch profiles are in `Properties/launchSettings.json`. Keep secrets in environment variables or .NET user secrets. HTTP/SSE logs may contain conversations: configure logging levels and retention before shared use.
 
-## Compilation et tests
+## Building and Testing
 
 ```powershell
 dotnet restore AGUIWebChat.slnx
@@ -57,11 +57,11 @@ dotnet build AGUIWebChat.slnx --configuration Release --no-restore
 dotnet test AGUIWebChat.slnx --configuration Release --no-build
 ```
 
-Les tests ne nécessitent pas Ollama. Ils couvrent notamment les paramètres invalides, le décodage SSE fragmenté, l'annulation et les erreurs de lecture. Le workflow `.github/workflows/ci.yml` exécute compilation et tests sur GitHub à chaque push et pull request.
+The tests do not require Ollama. They cover invalid settings, fragmented SSE decoding, cancellation, and read errors, among other cases.
 
 ## Git
 
-`.gitignore` exclut les sorties .NET, les fichiers utilisateur Visual Studio et les logs. `.gitattributes` normalise les textes en LF et les scripts Windows en CRLF.
+`.gitignore` excludes .NET build output, Visual Studio user files, and logs. `.gitattributes` normalizes text files to LF and Windows scripts to CRLF.
 
 ```powershell
 git status
