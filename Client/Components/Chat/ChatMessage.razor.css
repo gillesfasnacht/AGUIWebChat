@@ -121,3 +121,26 @@
     font-family: Consolas, "Cascadia Code", "Courier New", monospace;
     font-size: 1.05rem;
 }
+
+/* ============================================================
+   Tables
+   ============================================================ */
+
+.markdown-content {
+    min-width: 0;
+    max-width: 100%;
+}
+
+    .markdown-content ::deep table {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        border-collapse: collapse;
+        margin: 12px 0;
+    }
+
+    .markdown-content ::deep th,
+    .markdown-content ::deep td {
+        white-space: nowrap;
+    }
