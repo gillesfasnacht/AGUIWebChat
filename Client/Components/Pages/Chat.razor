@@ -82,6 +82,26 @@
                           @(IsSending ? "Sending..." : "Send")
             </FluentButton>
 
+            <FluentButton Id="thinking-effort-menu"
+                          Size="ButtonSize.Large"
+                          Appearance="ButtonAppearance.Outline"
+                          Disabled="@IsSending"
+                          Title="Choose thinking effort"
+                          Style="flex: 0 0 auto; white-space: nowrap;">
+                          @Settings.ThinkingEffort ▾
+            </FluentButton>
+
+            <FluentMenu Trigger="thinking-effort-menu">
+                <FluentMenuList>
+                    @foreach (var effort in Enum.GetValues<ThinkingEffort>())
+                    {
+                        <FluentMenuItem OnClick="@(async e => await SetThinkingEffortAsync(effort))">
+                            @(Settings.ThinkingEffort == effort ? "✓ " : "")@effort
+                        </FluentMenuItem>
+                    }
+                </FluentMenuList>
+            </FluentMenu>
+
             @if (IsSending)
             {
                 <FluentButton OnClick="CancelResponse">Stop</FluentButton>
@@ -111,6 +131,15 @@
 
     private ChatSettings Settings =>
         SettingsService.Settings;
+
+    private async Task SetThinkingEffortAsync(ThinkingEffort effort)
+    {
+        if (IsSending)
+            return;
+
+        Settings.ThinkingEffort = effort;
+        await SettingsService.SaveAsync();
+    }
 
     // =============================================================
     // Messages
