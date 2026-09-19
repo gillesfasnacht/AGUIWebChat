@@ -126,7 +126,7 @@
                             <MetricRow Label="Generation"
                                        Value="@FormatRate(Telemetry.GenerationTokensPerSecond)" />
 
-                            <MetricRow Label="Server"
+                            <MetricRow Label="Overall"
                                        Value="@FormatRate(Telemetry.EndToEndTokensPerSecond)" />
                         </section>
                     }
@@ -141,7 +141,7 @@
                             Advanced
                         </div>
 
-                        <MetricRow Label="Server overhead"
+                        <MetricRow Label="Observed difference"
                                    Value="@FormatDuration(ServerOverheadMs)" />
 
                         <MetricRow Label="Run ID"
