@@ -54,10 +54,10 @@ Common settings are stored in `appsettings*.json`, and local launch profiles are
 ```powershell
 dotnet restore AGUIWebChat.slnx
 dotnet build AGUIWebChat.slnx --configuration Release --no-restore
-dotnet test AGUIWebChat.slnx --configuration Release --no-build
+dotnet test --solution AGUIWebChat.slnx --configuration Release --no-build
 ```
 
-The tests do not require Ollama. They cover invalid settings, fragmented SSE decoding, cancellation, and read errors, among other cases.
+The tests use xUnit v3 with Microsoft Testing Platform, configured in `global.json`. They do not require Ollama. They cover invalid settings, fragmented SSE decoding, cancellation, and read errors, among other cases.
 
 ## Git
 

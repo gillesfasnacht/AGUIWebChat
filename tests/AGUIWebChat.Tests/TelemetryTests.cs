@@ -33,8 +33,8 @@ public class TelemetryTests
             return client;
         });
         var hub = Proxy<IHubContext<TelemetryHub>>((method, args) => clients);
-        await TelemetryPublisher.SendAsync(hub, "circuit-a", "Metrics", new { }, default);
-        await TelemetryPublisher.SendAsync(hub, "circuit-b", "Metrics", new { }, default);
+        await TelemetryPublisher.SendAsync(hub, "circuit-a", "Metrics", new { }, TestContext.Current.CancellationToken);
+        await TelemetryPublisher.SendAsync(hub, "circuit-b", "Metrics", new { }, TestContext.Current.CancellationToken);
         Assert.Equal(new[] { "circuit-a", "circuit-b" }, destinations);
     }
 
@@ -43,7 +43,7 @@ public class TelemetryTests
     {
         var calls = 0;
         var hub = Proxy<IHubContext<TelemetryHub>>((method, args) => { calls++; throw new IOException(); });
-        await TelemetryPublisher.SendAsync(hub, null, "Metrics", new { }, default);
+        await TelemetryPublisher.SendAsync(hub, null, "Metrics", new { }, TestContext.Current.CancellationToken);
         await TelemetryPublisher.SendAsync(hub, "channel", "Metrics", new { }, new CancellationToken(true));
         Assert.Equal(0, calls);
     }
@@ -52,6 +52,6 @@ public class TelemetryTests
     public async Task DeliveryFailureDoesNotEscapeIntoModelStream()
     {
         var hub = Proxy<IHubContext<TelemetryHub>>((method, args) => throw new IOException("Disconnected"));
-        await TelemetryPublisher.SendAsync(hub, "channel", "Metrics", new { }, default);
+        await TelemetryPublisher.SendAsync(hub, "channel", "Metrics", new { }, TestContext.Current.CancellationToken);
     }
 }

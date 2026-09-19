@@ -22,7 +22,7 @@ public class StreamingTests
         await using var stream = new SseReadLoggingStream(new MemoryStream(Encoding.UTF8.GetBytes(input)), logger);
         using var output = new MemoryStream();
         var buffer = new byte[1];
-        while (await stream.ReadAsync(buffer.AsMemory()) > 0)
+        while (await stream.ReadAsync(buffer.AsMemory(), TestContext.Current.CancellationToken) > 0)
             output.WriteByte(buffer[0]);
         Assert.Equal(input, Encoding.UTF8.GetString(output.ToArray()));
         Assert.Equal(eventCount, logger.Events.Count);
@@ -42,7 +42,7 @@ public class StreamingTests
     public async Task DisconnectionErrorIsPreserved()
     {
         await using var stream = new SseReadLoggingStream(new BrokenStream(), new EventLogger());
-        await Assert.ThrowsAsync<IOException>(async () => { _ = await stream.ReadAsync(new byte[1].AsMemory()); });
+        await Assert.ThrowsAsync<IOException>(async () => { _ = await stream.ReadAsync(new byte[1].AsMemory(), TestContext.Current.CancellationToken); });
     }
 
     private sealed class BrokenStream : MemoryStream
@@ -69,10 +69,10 @@ public class StreamingTests
             {
                 byte[] fragment = [value];
                 if (api == "sync") writer.Write(fragment, 0, 1);
-                else if (api == "array") await writer.WriteAsync(fragment, 0, 1, default);
-                else await writer.WriteAsync(fragment.AsMemory());
+                else if (api == "array") await writer.WriteAsync(fragment, 0, 1, TestContext.Current.CancellationToken);
+                else await writer.WriteAsync(fragment.AsMemory(), TestContext.Current.CancellationToken);
             }
-            await writer.FlushAsync(default);
+            await writer.FlushAsync(TestContext.Current.CancellationToken);
         }
         // The response body belongs to ASP.NET Core and must remain open.
         Assert.True(output.CanWrite);
@@ -81,7 +81,7 @@ public class StreamingTests
         output.Position = 0;
         await using var reader = new SseReadLoggingStream(output, readEvents);
         var buffer = new byte[1];
-        while (await reader.ReadAsync(buffer.AsMemory()) > 0) { }
+        while (await reader.ReadAsync(buffer.AsMemory(), TestContext.Current.CancellationToken) > 0) { }
         Assert.Equal(new[] { "data: café 😀", "data: fin" }, writtenEvents.Events);
         Assert.Equal(writtenEvents.Events, readEvents.Events);
     }
