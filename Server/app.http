@@ -1,3 +1,19 @@
 # For more info on HTTP files go to https://aka.ms/vs/httpfile
-POST {{AGUIWebChat.Server_HostAddress}}/dev/test-ai-model
+@AGUIWebChat_Server_HostAddress = http://localhost:5100
+
+### Liste des modèles
+
+GET {{AGUIWebChat_Server_HostAddress}}/api/models
+Accept: application/json
+
+
+### Modèle par Id
+
+GET {{AGUIWebChat_Server_HostAddress}}/api/models/1
+Accept: application/json
+
+
+### Modèles actifs uniquement
+
+GET {{AGUIWebChat_Server_HostAddress}}/api/models?enabledOnly=true
 Accept: application/json

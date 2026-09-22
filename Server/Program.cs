@@ -1,13 +1,13 @@
 using AGUIWebChat.Middleware;
 using AGUIWebChat.Server.Agents;
 using AGUIWebChat.Server.Data;
+using AGUIWebChat.Server.Endpoints;
 using AGUIWebChat.Server.Hubs;
 using AGUIWebChat.Server.Inference;
 using AGUIWebChat.Server.Mapping;
 using AGUIWebChat.Server.Middleware;
 using AGUIWebChat.Server.Services.AI;
 using AGUIWebChat.Server.Telemetry;
-using Mapster;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.AspNetCore.HttpLogging;
@@ -19,6 +19,7 @@ using OpenTelemetry;
 using OpenTelemetry.Trace;
 using Serilog;
 using System.Diagnostics;
+using System.Text.Json.Serialization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -70,21 +71,31 @@ Log.Information("UserName : {UserName}", Environment.UserName);
 Log.Information("Process Id : {ProcessId}", Process.GetCurrentProcess().Id);
 Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
+// Add AGUI HTTP logging interceptor for logging HTTP requests and responses
 builder.Services.AddHttpLoggingInterceptor<AgUiHttpLoggingInterceptor>();
 builder.Services.AddSingleton<IAgUiSseEventLogger, AGUIWebChat.Server.Middleware.AgUiSseEventLogger>();
+
+// Configure JSON serialization options to use string enums
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 // Add AGUI server services for hosting the AG-UI interface
 builder.Services.AddAGUIServer();
 
 // Add the database context for AI models 
-builder.Services.AddDbContext<ChatDbContext>(options =>
+if (!builder.Environment.IsEnvironment("Testing"))
 {
-    var connectionString =
-        builder.Configuration.GetConnectionString("ChatDatabase")
-        ?? throw new InvalidOperationException("Connection string 'ChatDatabase' not found.");
+    builder.Services.AddDbContext<ChatDbContext>(options =>
+    {
+        var connectionString =
+            builder.Configuration.GetConnectionString("ChatDatabase")
+            ?? throw new InvalidOperationException("Connection string 'ChatDatabase' not found.");
 
-    options.UseSqlServer(connectionString);
-});
+        options.UseSqlServer(connectionString);
+    });
+}
 
 // Register mapping configurations for AI models
 MapsterExtensions.RegisterMappings();
@@ -129,6 +140,8 @@ app.MapHub<TelemetryHub>("/telemetry");
 app.UseMiddleware<SseLoggingMiddleware>();
 
 app.MapAGUIServer("/ag-ui", enterpriseAgent);
+
+app.MapAIModelEndpoints();
 
 await app.RunAsync();
 
