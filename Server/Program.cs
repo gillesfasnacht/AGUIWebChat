@@ -1,13 +1,18 @@
 using AGUIWebChat.Middleware;
-using AGUIWebChat.Server.Telemetry;
 using AGUIWebChat.Server.Agents;
+using AGUIWebChat.Server.Data;
 using AGUIWebChat.Server.Hubs;
 using AGUIWebChat.Server.Inference;
+using AGUIWebChat.Server.Mapping;
 using AGUIWebChat.Server.Middleware;
+using AGUIWebChat.Server.Services.AI;
+using AGUIWebChat.Server.Telemetry;
+using Mapster;
 using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Hosting.AGUI.AspNetCore;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using OllamaSharp;
 using OpenTelemetry;
@@ -68,9 +73,29 @@ Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().Proc
 builder.Services.AddHttpLoggingInterceptor<AgUiHttpLoggingInterceptor>();
 builder.Services.AddSingleton<IAgUiSseEventLogger, AGUIWebChat.Server.Middleware.AgUiSseEventLogger>();
 
-// Ajouter les services AG-UI pour la gestion du protocole
+// Add AGUI server services for hosting the AG-UI interface
 builder.Services.AddAGUIServer();
 
+// Add the database context for AI models 
+builder.Services.AddDbContext<ChatDbContext>(options =>
+{
+    var connectionString =
+        builder.Configuration.GetConnectionString("ChatDatabase")
+        ?? throw new InvalidOperationException("Connection string 'ChatDatabase' not found.");
+
+    options.UseSqlServer(connectionString);
+});
+
+// Register mapping configurations for AI models
+MapsterExtensions.RegisterMappings();
+
+// Register the AI model service for managing AI models
+builder.Services.AddScoped<IAIModelService, AIModelService>();
+
+// Add OpenTelemetry (ReasoningTelemetry) tracing for the application
+// Note: In production, consider using a more robust exporter (e.g., Jaeger, Zipkin, or Application Insights)
+// For this example, we will use a console exporter for simplicity
+// The tracing will be configured in the CreateTraceProviderConsole method below
 WebApplication app = builder.Build();
 
 using var enterpriseSupportTracerProvider = CreateTraceProviderConsole("EnterpriseSupportAgenceSource",
@@ -78,6 +103,7 @@ using var enterpriseSupportTracerProvider = CreateTraceProviderConsole("Enterpri
 
 var telemetryHub = app.Services.GetRequiredService<IHubContext<TelemetryHub>>();
 
+// Create an AI agent for enterprise support using the Ollama API client
 AIAgent enterpriseAgent = ChatAgentFactory.CreateAgent(
     ollamaApiClient,
     name: "EnterpriseSupportAgent",
@@ -106,6 +132,7 @@ app.MapAGUIServer("/ag-ui", enterpriseAgent);
 
 await app.RunAsync();
 
+// Create a trace provider for console output
 static TracerProvider CreateTraceProviderConsole(params string[] sourceNames)
 {
     Log.Information("SERVER TRACE_PROVIDER console for {ActivitySources}",
