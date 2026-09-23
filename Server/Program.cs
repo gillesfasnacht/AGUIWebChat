@@ -23,20 +23,16 @@ using System.Text.Json.Serialization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Configuration for Ollama local
-var ollamaEndpoint = Environment.GetEnvironmentVariable("OLLAMA_ENDPOINT") ?? throw new InvalidOperationException("OLLAMA_ENDPOINT is not set.");
-var modelName = Environment.GetEnvironmentVariable("OLLAMA_MODEL") ?? "granite4.2:8b";
+// Resolve configuration when the host is built, so test hosts can override it.
+builder.Services.AddSingleton<OllamaApiClient>(services =>
+{
+    var configuration = services.GetRequiredService<IConfiguration>();
+    var endpoint = configuration["OLLAMA_ENDPOINT"] ?? throw new InvalidOperationException("OLLAMA_ENDPOINT is not set.");
+    var handler = new OllamaHttpLoggingHandler { InnerHandler = new HttpClientHandler() };
+    var httpClient = new HttpClient(handler) { BaseAddress = new Uri(endpoint) };
 
-// Create an OllamaApiClient with logging
-var ollamaHandlerClient = new OllamaHttpLoggingHandler
-{
-    InnerHandler = new HttpClientHandler()
-};
-var ollamaHttpClient = new HttpClient(ollamaHandlerClient)
-{
-    BaseAddress = new Uri(ollamaEndpoint)
-};
-var ollamaApiClient = new OllamaApiClient(ollamaHttpClient, modelName);
+    return new OllamaApiClient(httpClient, configuration["OLLAMA_MODEL"] ?? "granite4.2:8b");
+});
 
 // Use Serilog for logging requests and events
 builder.Host.UseSerilog((context, configuration) =>
@@ -44,6 +40,10 @@ builder.Host.UseSerilog((context, configuration) =>
 
 // Add SignalR for real-time communication
 builder.Services.AddSignalR();
+
+// Add ProblemDetails for standardized error responses and custom exception handling
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 
 // Use Microsoft Http logging traces
 builder.Services.AddHttpLogging(logging =>
@@ -116,13 +116,13 @@ var telemetryHub = app.Services.GetRequiredService<IHubContext<TelemetryHub>>();
 
 // Create an AI agent for enterprise support using the Ollama API client
 AIAgent enterpriseAgent = ChatAgentFactory.CreateAgent(
-    ollamaApiClient,
+    app.Services.GetRequiredService<OllamaApiClient>(),
     name: "EnterpriseSupportAgent",
     instruction: """
         You are a helpful business support agent
         """,
     source: "EnterpriseSupportAgenceSource",
-    modelName: modelName,
+    modelName: app.Configuration["OLLAMA_MODEL"] ?? "granite4.2:8b",
     defaultSettings: new InferenceSettings
     {
         ThinkingEffort = "low",
@@ -132,6 +132,12 @@ AIAgent enterpriseAgent = ChatAgentFactory.CreateAgent(
         NumCtx = 16384
     },
     telemetryHub: telemetryHub);
+
+app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), api =>
+{
+    api.UseExceptionHandler();
+    api.UseStatusCodePages();
+});
 
 app.UseHttpLogging();
 

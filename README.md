@@ -51,6 +51,16 @@ Common settings are stored in `appsettings*.json`, and local launch profiles are
 
 ## Building and Testing
 
+The model catalogue API (`/api/models`) returns errors as `application/problem+json`:
+
+- `400`: invalid model data, unavailable provider, mismatched IDs, or malformed requests. Business validation responses include an `errors.model` array.
+- `404`: the model requested by GET or PUT does not exist.
+- `409`: the service detects a duplicate model for the provider.
+- `500`: an unexpected error, with a neutral public message and a trace ID; internal details are logged on the server.
+
+Deleting an absent model remains idempotent and returns `204`.
+API tests supply their own Ollama configuration and an in-memory SQLite database. They do not use a local Ollama instance or require `OLLAMA_ENDPOINT` / `OLLAMA_MODEL` environment variables.
+
 ```powershell
 dotnet restore AGUIWebChat.slnx
 dotnet build AGUIWebChat.slnx --configuration Release --no-restore

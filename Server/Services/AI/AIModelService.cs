@@ -1,4 +1,4 @@
-﻿using AGUIWebChat.Contracts.AI;
+using AGUIWebChat.Contracts.AI;
 using AGUIWebChat.Contracts.AI.Models;
 using AGUIWebChat.Server.Data;
 using AGUIWebChat.Server.Domain.AI;
@@ -16,12 +16,11 @@ namespace AGUIWebChat.Server.Services.AI
             _dbContext = dbContext;
         }
 
-        public async Task<IReadOnlyList<AIModelEditModel>> GetModelsAsync(
-            bool enabledOnly = false,
-            CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<AIModelEditModel>> GetModelsAsync(bool enabledOnly = false, CancellationToken cancellationToken = default)
         {
             var query = _dbContext.AIModels
                 .AsNoTracking()
+                .Include(x => x.Provider)
                 .Include(x => x.Defaults)
                 .Include(x => x.ReasoningEfforts)
                 .AsQueryable();
@@ -31,62 +30,50 @@ namespace AGUIWebChat.Server.Services.AI
                 query = query.Where(x => x.IsEnabled);
             }
 
-            var entities = await query
-                .OrderBy(x => x.DisplayName)
-                .ToListAsync(cancellationToken);
+            var entities = await query.OrderBy(x => x.DisplayName).ToListAsync(cancellationToken);
 
-            return entities
-                .Select(x => x.Adapt<AIModelEditModel>())
-                .ToList();
+            return entities.Select(x => x.Adapt<AIModelEditModel>()).ToList();
         }
 
-        public async Task<AIModelEditModel?> GetModelAsync(
-            int id,
-            CancellationToken cancellationToken = default)
+        public async Task<AIModelEditModel?> GetModelAsync(int id, CancellationToken cancellationToken = default)
         {
             var entity = await _dbContext.AIModels
                 .AsNoTracking()
+                .Include(x => x.Provider)
                 .Include(x => x.Defaults)
                 .Include(x => x.ReasoningEfforts)
-                .FirstOrDefaultAsync(
-                    x => x.Id == id,
-                    cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
             return entity?.Adapt<AIModelEditModel>();
         }
 
-        public async Task<AIModelEditModel?> GetModelByModelIdAsync(
-            int providerId,
-            string modelId,
-            CancellationToken cancellationToken = default)
+        public async Task<AIModelEditModel?> GetModelByModelIdAsync(int providerId, string modelId, CancellationToken cancellationToken = default)
         {
             var entity = await _dbContext.AIModels
                 .AsNoTracking()
+                .Include(x => x.Provider)
                 .Include(x => x.Defaults)
                 .Include(x => x.ReasoningEfforts)
-                .FirstOrDefaultAsync(
-                    x => x.ProviderId == providerId &&
-                         x.ModelId == modelId,
-                    cancellationToken);
+                .FirstOrDefaultAsync(x => x.ProviderId == providerId && x.ModelId == modelId, cancellationToken);
 
             return entity?.Adapt<AIModelEditModel>();
         }
 
-        public async Task<AIModelEditModel> CreateAsync(
-            AIModelEditModel model,
-            CancellationToken cancellationToken = default)
+        private async Task<AIProvider> GetProviderAsync(int providerId, CancellationToken cancellationToken)
+        {
+            return await _dbContext.AIProviders
+                .FirstOrDefaultAsync(x => x.Id == providerId && x.IsEnabled, cancellationToken)
+                ?? throw new InvalidOperationException($"AI provider with id {providerId} does not exist or is disabled.");
+        }
+
+        public async Task<AIModelEditModel> CreateAsync(AIModelEditModel model, CancellationToken cancellationToken = default)
         {
             Validate(model);
 
-            await ValidateProviderAsync(
-                model.ProviderId,
-                cancellationToken);
+            var provider = await GetProviderAsync(model.ProviderId, cancellationToken);
 
-            await ValidateModelIdIsUniqueAsync(
-                model.ProviderId,
-                model.ModelId,
-                null,
-                cancellationToken);
+            await ValidateProviderAsync(model.ProviderId, cancellationToken);
+            await ValidateModelIdIsUniqueAsync(model.ProviderId, model.ModelId, null, cancellationToken);
 
             var entity = model.Adapt<AIModel>();
 
@@ -100,24 +87,20 @@ namespace AGUIWebChat.Server.Services.AI
             return entity.Adapt<AIModelEditModel>();
         }
 
-        public async Task<AIModelEditModel> UpdateAsync(
-            AIModelEditModel model,
-            CancellationToken cancellationToken = default)
+        public async Task<AIModelEditModel> UpdateAsync(AIModelEditModel model, CancellationToken cancellationToken = default)
         {
             Validate(model);
 
-            await ValidateProviderAsync(
-                model.ProviderId,
-                cancellationToken);
+            var provider = await GetProviderAsync(model.ProviderId, cancellationToken);
+
+            await ValidateProviderAsync(model.ProviderId, cancellationToken);
 
             var entity = await _dbContext.AIModels
+                .Include(x => x.Provider)
                 .Include(x => x.Defaults)
                 .Include(x => x.ReasoningEfforts)
-                .FirstOrDefaultAsync(
-                    x => x.Id == model.Id,
-                    cancellationToken)
-                ?? throw new InvalidOperationException(
-                    $"AI model with id {model.Id} was not found.");
+                .FirstOrDefaultAsync(x => x.Id == model.Id, cancellationToken)
+                ?? throw new ModelNotFoundException($"AI model with id {model.Id} was not found.");
 
             await ValidateModelIdIsUniqueAsync(
                 model.ProviderId,
@@ -128,6 +111,8 @@ namespace AGUIWebChat.Server.Services.AI
             // Mapster ne modifie ici que les propriétés scalaires.
             model.Adapt(entity);
 
+            entity.Provider = provider;
+
             UpdateDefaults(entity, model);
             UpdateReasoningEfforts(entity, model);
 
@@ -136,14 +121,10 @@ namespace AGUIWebChat.Server.Services.AI
             return entity.Adapt<AIModelEditModel>();
         }
 
-        public async Task DeleteAsync(
-            int id,
-            CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
             var entity = await _dbContext.AIModels
-                .FirstOrDefaultAsync(
-                    x => x.Id == id,
-                    cancellationToken);
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
             if (entity is null)
             {
@@ -155,19 +136,14 @@ namespace AGUIWebChat.Server.Services.AI
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
-        private async Task ValidateProviderAsync(
-            int providerId,
-            CancellationToken cancellationToken)
+        private async Task ValidateProviderAsync(int providerId, CancellationToken cancellationToken)
         {
             var exists = await _dbContext.AIProviders
-                .AnyAsync(
-                    x => x.Id == providerId && x.IsEnabled,
-                    cancellationToken);
+                .AnyAsync(x => x.Id == providerId && x.IsEnabled, cancellationToken);
 
             if (!exists)
             {
-                throw new InvalidOperationException(
-                    $"AI provider with id {providerId} does not exist or is disabled.");
+                throw new ModelValidationException($"AI provider with id {providerId} does not exist or is disabled.");
             }
         }
 
@@ -187,14 +163,11 @@ namespace AGUIWebChat.Server.Services.AI
 
             if (exists)
             {
-                throw new InvalidOperationException(
-                    $"Model '{modelId}' already exists for provider {providerId}.");
+                throw new ModelConflictException($"Model '{modelId}' already exists for provider {providerId}.");
             }
         }
 
-        private static void UpdateDefaults(
-            AIModel entity,
-            AIModelEditModel model)
+        private static void UpdateDefaults(AIModel entity, AIModelEditModel model)
         {
             if (!HasDefaults(model))
             {
@@ -218,9 +191,7 @@ namespace AGUIWebChat.Server.Services.AI
                    model.NumCtx.HasValue;
         }
 
-        private static void UpdateReasoningEfforts(
-            AIModel entity,
-            AIModelEditModel model)
+        private static void UpdateReasoningEfforts(AIModel entity, AIModelEditModel model)
         {
             entity.ReasoningEfforts.Clear();
 
@@ -229,8 +200,7 @@ namespace AGUIWebChat.Server.Services.AI
                 return;
             }
 
-            foreach (var effort in model.ReasoningEfforts
-                         .OrderBy(x => x.SortOrder))
+            foreach (var effort in model.ReasoningEfforts.OrderBy(x => x.SortOrder))
             {
                 entity.ReasoningEfforts.Add(
                     new AIModelReasoningEffort
@@ -247,54 +217,53 @@ namespace AGUIWebChat.Server.Services.AI
         {
             if (model.ProviderId <= 0)
             {
-                throw new ArgumentException("A provider must be selected.");
+                throw new ModelValidationException("A provider must be selected.");
             }
 
             if (string.IsNullOrWhiteSpace(model.ModelId))
             {
-                throw new ArgumentException("ModelId is required.");
+                throw new ModelValidationException("ModelId is required.");
             }
 
             if (string.IsNullOrWhiteSpace(model.DisplayName))
             {
-                throw new ArgumentException("DisplayName is required.");
+                throw new ModelValidationException("DisplayName is required.");
             }
 
             if (model.ContextWindow is <= 0)
             {
-                throw new ArgumentException("ContextWindow must be greater than zero.");
+                throw new ModelValidationException("ContextWindow must be greater than zero.");
             }
 
             if (model.MaxOutputTokens is <= 0)
             {
-                throw new ArgumentException("MaxOutputTokens must be greater than zero.");
+                throw new ModelValidationException("MaxOutputTokens must be greater than zero.");
             }
 
             if (model.Temperature is < 0)
             {
-                throw new ArgumentException("Temperature cannot be negative.");
+                throw new ModelValidationException("Temperature cannot be negative.");
             }
 
             if (model.TopP is < 0 or > 1)
             {
-                throw new ArgumentException("TopP must be between 0 and 1.");
+                throw new ModelValidationException("TopP must be between 0 and 1.");
             }
 
             if (model.TopK is <= 0)
             {
-                throw new ArgumentException("TopK must be greater than zero.");
+                throw new ModelValidationException("TopK must be greater than zero.");
             }
 
             if (model.NumCtx is <= 0)
             {
-                throw new ArgumentException("NumCtx must be greater than zero.");
+                throw new ModelValidationException("NumCtx must be greater than zero.");
             }
 
             ValidateReasoning(model);
         }
 
-        private static void ValidateReasoning(
-            AIModelEditModel model)
+        private static void ValidateReasoning(AIModelEditModel model)
         {
             if (model.ThinkingMode != ThinkingMode.Effort)
             {
@@ -303,22 +272,22 @@ namespace AGUIWebChat.Server.Services.AI
 
             if (model.ReasoningEfforts.Count == 0)
             {
-                throw new ArgumentException("At least one reasoning effort is required.");
+                throw new ModelValidationException("At least one reasoning effort is required.");
             }
 
             if (model.ReasoningEfforts.Count(x => x.IsDefault) != 1)
             {
-                throw new ArgumentException("Exactly one reasoning effort must be the default.");
+                throw new ModelValidationException("Exactly one reasoning effort must be the default.");
             }
 
             if (model.ReasoningEfforts.Any(x => string.IsNullOrWhiteSpace(x.DisplayName)))
             {
-                throw new ArgumentException("Every reasoning effort must have a display name.");
+                throw new ModelValidationException("Every reasoning effort must have a display name.");
             }
 
             if (model.ReasoningEfforts.Any(x => string.IsNullOrWhiteSpace(x.Value)))
             {
-                throw new ArgumentException("Every reasoning effort must have a value.");
+                throw new ModelValidationException("Every reasoning effort must have a value.");
             }
 
             var duplicateValue = model.ReasoningEfforts
@@ -329,7 +298,7 @@ namespace AGUIWebChat.Server.Services.AI
 
             if (duplicateValue)
             {
-                throw new ArgumentException("Reasoning effort values must be unique.");
+                throw new ModelValidationException("Reasoning effort values must be unique.");
             }
         }
     }

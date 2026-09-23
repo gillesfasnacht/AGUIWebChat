@@ -38,7 +38,7 @@ namespace AGUIWebChat.Server.Endpoints
             var model = await modelService.GetModelAsync(id, cancellationToken);
 
             return model is null
-                ? Results.NotFound()
+                ? throw new ModelNotFoundException($"AI model with id {id} was not found.")
                 : Results.Ok(model);
         }
 
@@ -60,7 +60,7 @@ namespace AGUIWebChat.Server.Endpoints
         {
             if (id != model.Id)
             {
-                return Results.BadRequest("The route id does not match the model id.");
+                throw new ModelValidationException("The route id does not match the model id.");
             }
 
             var updated = await modelService.UpdateAsync(model, cancellationToken);

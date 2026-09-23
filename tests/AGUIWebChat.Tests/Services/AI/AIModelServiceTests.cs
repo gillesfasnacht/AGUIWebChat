@@ -20,58 +20,34 @@ namespace AGUIWebChat.Tests.Services.AI
         public async Task CreateAsync_ShouldCreateModelWithDefaultsAndReasoningEfforts()
         {
             var cancellationToken = TestContext.Current.CancellationToken;
-
             await using var database = await TestDbContextFactory.CreateAsync(cancellationToken);
-
             var service = new AIModelService(database.DbContext);
-
             var model = CreateGraniteModel();
-
-            var result = await service.CreateAsync(
-                model,
-                TestContext.Current.CancellationToken);
+            var result = await service.CreateAsync(model, TestContext.Current.CancellationToken);
 
             Assert.NotEqual(0, result.Id);
-
-            Assert.Equal(
-                "granite4.2:8b",
-                result.ModelId);
-
-            Assert.Equal(
-                "Granite 4.2 8B",
-                result.DisplayName);
-
-            Assert.Equal(
-                ThinkingMode.Effort,
-                result.ThinkingMode);
-
+            Assert.Equal("granite4.2:8b", result.ModelId);
+            Assert.Equal("Granite 4.2 8B", result.DisplayName);
+            Assert.Equal("Ollama", result.ProviderName);
+            Assert.Equal(ThinkingMode.Effort, result.ThinkingMode);
             Assert.Equal(0.7, result.Temperature);
             Assert.Equal(0.9, result.TopP);
             Assert.Equal(40, result.TopK);
             Assert.Equal(8192, result.NumCtx);
-
-            Assert.Equal(
-                3,
-                result.ReasoningEfforts.Count);
-
-            Assert.Single(
-                result.ReasoningEfforts,
-                x => x.IsDefault);
+            Assert.Equal(3, result.ReasoningEfforts.Count);
+            Assert.Single(result.ReasoningEfforts, x => x.IsDefault);
+            Assert.Equal(1, result.ProviderId);
         }
 
         [Fact]
         public async Task UpdateAsync_ShouldUpdateDefaultsAndReplaceReasoningEfforts()
         {
             var cancellationToken = TestContext.Current.CancellationToken;
-
             await using var database = await TestDbContextFactory.CreateAsync(cancellationToken);
-
-            var service =
-                new AIModelService(database.DbContext);
+            var service = new AIModelService(database.DbContext);
 
             // Arrange : création du modèle initial
             var model = CreateGraniteModel();
-
             var created = await service.CreateAsync(model, cancellationToken);
 
             // Modification des propriétés simples
@@ -115,46 +91,19 @@ namespace AGUIWebChat.Tests.Services.AI
 
             // Assert : résultat retourné par le service
             Assert.Equal("Granite 4.2 8B - Updated", updated.DisplayName);
-
             Assert.Equal(65536, updated.ContextWindow);
-
             Assert.Equal(0.5, updated.Temperature);
-
             Assert.Equal(0.95, updated.TopP);
-
             Assert.Equal(50, updated.TopK);
-
             Assert.Equal(16384, updated.NumCtx);
-
             Assert.Equal(3, updated.ReasoningEfforts.Count);
-
-            Assert.Contains(
-                updated.ReasoningEfforts,
-                x => x.Value == "minimal");
-
-            Assert.Contains(
-                updated.ReasoningEfforts,
-                x => x.Value == "standard");
-
-            Assert.Contains(
-                updated.ReasoningEfforts,
-                x => x.Value == "extended");
-
-            Assert.DoesNotContain(
-                updated.ReasoningEfforts,
-                x => x.Value == "low");
-
-            Assert.DoesNotContain(
-                updated.ReasoningEfforts,
-                x => x.Value == "medium");
-
-            Assert.DoesNotContain(
-                updated.ReasoningEfforts,
-                x => x.Value == "high");
-
-            Assert.Single(
-                updated.ReasoningEfforts,
-                x => x.IsDefault);
+            Assert.Contains(updated.ReasoningEfforts, x => x.Value == "minimal");
+            Assert.Contains(updated.ReasoningEfforts, x => x.Value == "standard");
+            Assert.Contains(updated.ReasoningEfforts, x => x.Value == "extended");
+            Assert.DoesNotContain(updated.ReasoningEfforts, x => x.Value == "low");
+            Assert.DoesNotContain(updated.ReasoningEfforts, x => x.Value == "medium");
+            Assert.DoesNotContain(updated.ReasoningEfforts, x => x.Value == "high");
+            Assert.Single(updated.ReasoningEfforts, x => x.IsDefault);
 
             database.DbContext.ChangeTracker.Clear();
 
@@ -162,77 +111,41 @@ namespace AGUIWebChat.Tests.Services.AI
                 .AsNoTracking()
                 .Include(x => x.Defaults)
                 .Include(x => x.ReasoningEfforts)
-                .SingleAsync(
-                    x => x.Id == updated.Id,
-                    cancellationToken);
+                .SingleAsync(x => x.Id == updated.Id, cancellationToken);
 
             Assert.NotNull(entity.Defaults);
-
             Assert.Equal(0.5, entity.Defaults.Temperature);
-
             Assert.Equal(0.95, entity.Defaults.TopP);
-
             Assert.Equal(50, entity.Defaults.TopK);
-
             Assert.Equal(16384, entity.Defaults.NumCtx);
-
             Assert.Equal(3, entity.ReasoningEfforts.Count);
-
-            Assert.DoesNotContain(
-                entity.ReasoningEfforts,
-                x => x.Value == "low");
-
-            Assert.DoesNotContain(
-                entity.ReasoningEfforts,
-                x => x.Value == "medium");
-
-            Assert.DoesNotContain(
-                entity.ReasoningEfforts,
-                x => x.Value == "high");
-
-            Assert.Contains(
-                entity.ReasoningEfforts,
-                x => x.Value == "minimal");
-
-            Assert.Contains(
-                entity.ReasoningEfforts,
-                x => x.Value == "standard");
-
-            Assert.Contains(
-                entity.ReasoningEfforts,
-                x => x.Value == "extended");
+            Assert.DoesNotContain(entity.ReasoningEfforts, x => x.Value == "low");
+            Assert.DoesNotContain(entity.ReasoningEfforts, x => x.Value == "medium");
+            Assert.DoesNotContain(entity.ReasoningEfforts, x => x.Value == "high");
+            Assert.Contains(entity.ReasoningEfforts, x => x.Value == "minimal");
+            Assert.Contains(entity.ReasoningEfforts, x => x.Value == "standard");
+            Assert.Contains(entity.ReasoningEfforts, x => x.Value == "extended");
         }
 
         [Fact]
         public async Task UpdateAsync_WhenThinkingModeChangesFromEffortToOnOff_ShouldRemoveReasoningEfforts()
         {
             var cancellationToken =  TestContext.Current.CancellationToken;
-
             await using var database = await TestDbContextFactory.CreateAsync(cancellationToken);
-
             var service = new AIModelService(database.DbContext);
 
             // Arrange
             var model = CreateGraniteModel();
-
-            var created = await service.CreateAsync(
-                model,
-                cancellationToken);
+            var created = await service.CreateAsync(model, cancellationToken);
 
             Assert.Equal(3, created.ReasoningEfforts.Count);
 
             // Act
             created.ThinkingMode = ThinkingMode.OnOff;
-
-            var updated = await service.UpdateAsync(
-                created,
-                cancellationToken);
+            var updated = await service.UpdateAsync(created, cancellationToken);
 
             // Assert sur le résultat du service
-            Assert.Equal(
-                ThinkingMode.OnOff,
-                updated.ThinkingMode);
-
+            Assert.Equal(ThinkingMode.OnOff, updated.ThinkingMode);
             Assert.Empty(updated.ReasoningEfforts);
 
             // On vide le tracking pour forcer une vraie relecture SQLite
@@ -241,12 +154,9 @@ namespace AGUIWebChat.Tests.Services.AI
             var entity = await database.DbContext.AIModels
                 .AsNoTracking()
                 .Include(x => x.ReasoningEfforts)
-                .SingleAsync(
-                    x => x.Id == updated.Id,
-                    cancellationToken);
+                .SingleAsync(x => x.Id == updated.Id, cancellationToken);
 
             Assert.Equal(ThinkingMode.OnOff, entity.ThinkingMode);
-
             Assert.Empty(entity.ReasoningEfforts);
         }
 
@@ -254,9 +164,7 @@ namespace AGUIWebChat.Tests.Services.AI
         public async Task UpdateAsync_WhenAllDefaultsAreNull_ShouldRemoveDefaults()
         {
             var cancellationToken = TestContext.Current.CancellationToken;
-
             await using var database = await TestDbContextFactory.CreateAsync(cancellationToken);
-
             var service = new AIModelService(database.DbContext);
 
             // Arrange
@@ -289,18 +197,12 @@ namespace AGUIWebChat.Tests.Services.AI
             var entity = await database.DbContext.AIModels
                 .AsNoTracking()
                 .Include(x => x.Defaults)
-                .SingleAsync(
-                    x => x.Id == updated.Id,
-                    cancellationToken);
+                .SingleAsync(x => x.Id == updated.Id, cancellationToken);
 
             Assert.Null(entity.Defaults);
 
-            var defaultsExist =
-                await database.DbContext.AIModelDefaults
-                    .AsNoTracking()
-                    .AnyAsync(
-                        x => x.AIModelId == updated.Id,
-                        cancellationToken);
+            var defaultsExist = await database.DbContext.AIModelDefaults
+                .AsNoTracking().AnyAsync(x => x.AIModelId == updated.Id, cancellationToken);
 
             Assert.False(defaultsExist);
         }
@@ -309,14 +211,11 @@ namespace AGUIWebChat.Tests.Services.AI
         public async Task DeleteAsync_ShouldDeleteModelAndRelatedData()
         {
             var cancellationToken = TestContext.Current.CancellationToken;
-
             await using var database = await TestDbContextFactory.CreateAsync(cancellationToken);
-
             var service = new AIModelService(database.DbContext);
 
             // Arrange
             var model = CreateGraniteModel();
-
             var created = await service.CreateAsync(model, cancellationToken);
 
             // Act
@@ -326,26 +225,14 @@ namespace AGUIWebChat.Tests.Services.AI
             database.DbContext.ChangeTracker.Clear();
 
             // Assert
-            var modelExists =
-                await database.DbContext.AIModels
-                    .AsNoTracking()
-                    .AnyAsync(
-                        x => x.Id == created.Id,
-                        cancellationToken);
+            var modelExists = await database.DbContext.AIModels
+                .AsNoTracking().AnyAsync(x => x.Id == created.Id, cancellationToken);
 
-            var defaultsExist =
-                await database.DbContext.AIModelDefaults
-                    .AsNoTracking()
-                    .AnyAsync(
-                        x => x.AIModelId == created.Id,
-                        cancellationToken);
+            var defaultsExist = await database.DbContext.AIModelDefaults
+                .AsNoTracking().AnyAsync(x => x.AIModelId == created.Id, cancellationToken);
 
-            var effortsExist =
-                await database.DbContext.AIModelReasoningEfforts
-                    .AsNoTracking()
-                    .AnyAsync(
-                        x => x.AIModelId == created.Id,
-                        cancellationToken);
+            var effortsExist = await database.DbContext.AIModelReasoningEfforts
+                .AsNoTracking().AnyAsync(x => x.AIModelId == created.Id, cancellationToken);
 
             Assert.False(modelExists);
             Assert.False(defaultsExist);
