@@ -63,7 +63,7 @@ namespace AGUIWebChat.Server.Services.AI
         {
             return await _dbContext.AIProviders
                 .FirstOrDefaultAsync(x => x.Id == providerId && x.IsEnabled, cancellationToken)
-                ?? throw new InvalidOperationException($"AI provider with id {providerId} does not exist or is disabled.");
+                ?? throw new ModelValidationException($"AI provider with id {providerId} does not exist or is disabled.");
         }
 
         public async Task<AIModelEditModel> CreateAsync(AIModelEditModel model, CancellationToken cancellationToken = default)
