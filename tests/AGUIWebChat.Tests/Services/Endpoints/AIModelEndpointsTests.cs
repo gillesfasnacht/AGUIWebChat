@@ -43,7 +43,7 @@ namespace AGUIWebChat.Tests.Services.Endpoints
             Assert.NotNull(created);
             Assert.True(created.Id > 0);
             Assert.Equal("granite4.2:8b", created.ModelId);
-            //Assert.Equal("Ollama", created.ProviderName);
+            Assert.Equal("Ollama", created.ProviderName);
             Assert.Equal(ThinkingMode.Effort, created.ThinkingMode);
             Assert.Equal(3, created.ReasoningEfforts.Count);
             Assert.Equal(0.7, created.Temperature);

@@ -4,16 +4,16 @@ A Blazor Server (.NET 10) chat application featuring Fluent UI, an Ollama agent 
 
 ## Project Structure
 
-- `Client/Components/Pages/Chat.razor`: chat page and response cancellation.
-- `Client/Components/Chat/`: messages, settings, reasoning, and metrics.
-- `Client/Services/`: AG-UI communication, settings, and a SignalR connection per circuit.
-- `Middleware/`: shared `AGUIWebChat.Middleware` library (logging interface, AG-UI event logger, UTF-8 SSE decoder, and read/write streams).
-- `Client/Middleware/` and `Server/Middleware/`: application-specific HTTP integrations and adapters that preserve existing logging categories.
-- `Server/Agents/ChatAgentFactory.cs`: agent creation and instrumentation.
-- `Server/Inference/`: inference settings and validation.
-- `Server/Telemetry/`: response monitoring and metrics publication.
-- `Server/Hubs/`: SignalR connection handling.
-- `Contracts/`: DTOs shared by the server and client.
+- `src/Client/Components/Pages/Chat.razor`: chat page and response cancellation.
+- `src/Client/Components/Chat/`: messages, settings, reasoning, and metrics.
+- `src/Server/Services/`: AG-UI communication, settings, and a SignalR connection per circuit.
+- `src/Server/Middleware/`: shared `AGUIWebChat.Middleware` library (logging interface, AG-UI event logger, UTF-8 SSE decoder, and read/write streams).
+- `src/Client/Middleware/` and `src/Server/Middleware/`: application-specific HTTP integrations and adapters that preserve existing logging categories.
+- `src/Server/Agents/ChatAgentFactory.cs`: agent creation and instrumentation.
+- `src/Server/Inference/`: inference settings and validation.
+- `src/Server/Telemetry/`: response monitoring and metrics publication.
+- `src/Server/Hubs/`: SignalR connection handling.
+- `src/Contracts/`: DTOs shared by the server and client.
 - `tests/AGUIWebChat.Tests/`: automated tests.
 
 ## Getting Started
@@ -43,8 +43,16 @@ The server exposes `/ag-ui` and `/telemetry`. The client uses `AGUI_SERVER_URL` 
 
 ## Settings and Telemetry
 
-Invalid settings fall back to their default values. Server-side limits are: temperature 0–2, top-p 0–1, top-k 1–1000, context size 1024–131072, and reasoning effort `low`, `medium`, or `high`. These application limits do not guarantee that the model or hardware can support the selected values.
+Invalid settings fall back to their default values. Server-side limits are: 
 
+temperature 0–2
+top-p 0–1
+top-k 1–1000
+context size 1k–128k
+
+And reasoning effort `low`, `medium`, or `high`. 
+
+These application limits do not guarantee that the model or hardware can support the selected values.
 Each Blazor circuit has its own connection and randomly generated telemetry channel, which is retained across SignalR reconnections. The server publishes only to that channel, without broadcasting to all clients. This mechanism separates circuits; it does not replace user authentication. Metrics are not replayed after a disconnection. A publication failure must not interrupt the model's response.
 
 Common settings are stored in `appsettings*.json`, and local launch profiles are in `Properties/launchSettings.json`. Keep secrets in environment variables or .NET user secrets. HTTP/SSE logs may contain conversations: configure logging levels and retention before shared use.

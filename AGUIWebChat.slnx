@@ -1,7 +1,20 @@
 <Solution>
-    <Project Path="Client/AGUIWebChat.Client.csproj" />
-    <Project Path="Contracts/AGUIWebChat.Contracts.csproj" />
-    <Project Path="Middleware/AGUIWebChat.Middleware.csproj" />
-    <Project Path="Server/AGUIWebChat.Server.csproj" />
-    <Project Path="Tests/AGUIWebChat.Tests/AGUIWebChat.Tests.csproj" />
+  <!-- Dossier virtuel pour le code source -->
+  <Folder Name="/src/">
+    <Project Path="src/Client/AGUIWebChat.Client.csproj" />
+    <Project Path="src/Contracts/AGUIWebChat.Contracts.csproj" />
+    <Project Path="src/Middleware/AGUIWebChat.Middleware.csproj" />
+    <Project Path="src/Server/AGUIWebChat.Server.csproj" />
+  </Folder>
+
+  <!-- Dossier virtuel pour les tests -->
+  <Folder Name="/tests/">
+    <Project Path="tests/AGUIWebChat.Tests/AGUIWebChat.Tests.csproj" />
+  </Folder>
+
+  <!-- Dossier virtuel pour la documentation -->
+  <Folder Name="/docs/">
+    <File Path="docs/ARCHITECTURE.md" />
+    <File Path="docs/README.md" />
+  </Folder>
 </Solution>

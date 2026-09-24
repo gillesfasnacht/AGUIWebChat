@@ -1,0 +1,75 @@
+﻿@page "/models"
+
+@using AGUIWebChat.Contracts.AI.Models
+@using AGUIWebChat.Client.Services.AI
+
+@inject AIModelApiClient ModelApiClient
+
+<PageTitle>AI Models</PageTitle>
+
+<h1>AI Models</h1>
+
+<p>Manage the AI models available to agents.</p>
+
+@if (_loading)
+{
+    <FluentSpinner />
+}
+else if (_errorMessage is not null)
+{
+    <FluentMessageBar Intent="MessageBarIntent.Error">
+        @_errorMessage
+    </FluentMessageBar>
+}
+else
+{
+    <FluentDataGrid Items="@_models.AsQueryable()">
+        <PropertyColumn Property="@(x => x.ProviderName)" Title="Provider" />
+
+        <PropertyColumn Property="@(x => x.DisplayName)" Title="Model" />
+
+        <PropertyColumn Property="@(x => x.ModelId)" Title="Model ID" />
+
+        <PropertyColumn Property="@(x => x.ThinkingMode)" Title="Thinking" />
+
+        <PropertyColumn Property="@(x => x.ContextWindow)" Title="Context" />
+
+        <TemplateColumn Title="Enabled">
+            <ChildContent>
+                @if (context.IsEnabled)
+                {
+                    <FluentIcon Value="@(new Icons.Regular.Size20.CheckmarkCircle())" />
+                }
+                else
+                {
+                    <FluentIcon Value="@(new Icons.Regular.Size20.DismissCircle())" />
+                }
+            </ChildContent>
+        </TemplateColumn>
+    </FluentDataGrid>
+}
+
+@code
+{
+    private IReadOnlyList<AIModelEditModel> _models = [];
+
+    private bool _loading = true;
+
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _models = await ModelApiClient.GetModelsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unable to load AI models: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

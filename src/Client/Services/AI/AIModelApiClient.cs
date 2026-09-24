@@ -7,11 +7,10 @@ namespace AGUIWebChat.Client.Services.AI
 {
     public sealed class AIModelApiClient
     {
-        private static readonly JsonSerializerOptions JsonOptions =
-            new(JsonSerializerDefaults.Web)
-            {
-                Converters = { new JsonStringEnumConverter() }
-            };
+        private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+        {
+            Converters = { new JsonStringEnumConverter() }
+        };
 
         private readonly HttpClient _httpClient;
 

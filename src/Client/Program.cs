@@ -40,7 +40,10 @@ Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().Proc
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddFluentUIComponents();
 builder.Services.AddScoped(_ => new TelemetryService(new Uri(new Uri(serverUrl), "/telemetry").ToString()));
-builder.Services.AddScoped<AIModelApiClient>();
+builder.Services.AddHttpClient<AIModelApiClient>(client =>
+{
+    client.BaseAddress = new Uri(serverUrl);
+});
 
 // AG-UI client SSE event logger
 builder.Services.AddSingleton<IAgUiSseEventLogger, AgUiClientSseEventLogger>();

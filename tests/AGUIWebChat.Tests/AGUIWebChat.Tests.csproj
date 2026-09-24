@@ -14,11 +14,11 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.10.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0" PrivateAssets="all" />
     <PackageReference Include="xunit.v3" Version="4.0.1" />
-    <ProjectReference Include="..\..\Client\AGUIWebChat.Client.csproj" />
-    <ProjectReference Include="..\..\Contracts\AGUIWebChat.Contracts.csproj" />
-    <ProjectReference Include="..\..\Server\AGUIWebChat.Server.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Middleware\AGUIWebChat.Middleware.csproj" />
+    <ProjectReference Include="..\..\src\Client\AGUIWebChat.Client.csproj" />
+    <ProjectReference Include="..\..\src\Contracts\AGUIWebChat.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\Middleware\AGUIWebChat.Middleware.csproj" />
+    <ProjectReference Include="..\..\src\Server\AGUIWebChat.Server.csproj" />
   </ItemGroup>
 </Project>
