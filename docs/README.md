@@ -1,31 +1,44 @@
 # AGUI WebChat
 
-A Blazor Server (.NET 10) chat application featuring Fluent UI, an Ollama agent exposed through AG-UI, and SignalR telemetry.
+A Blazor Server (.NET 10) chat application featuring Fluent UI, an Ollama agent exposed through AG-UI, SignalR telemetry, and an AI model catalogue backed by SQL Server.
+
+[Repository overview](../README.md) · [Architecture](ARCHITECTURE.md)
 
 ## Project Structure
 
 - `src/Client/Components/Pages/Chat.razor`: chat page and response cancellation.
 - `src/Client/Components/Chat/`: messages, settings, reasoning, and metrics.
-- `src/Server/Services/`: AG-UI communication, settings, and a SignalR connection per circuit.
-- `src/Server/Middleware/`: shared `AGUIWebChat.Middleware` library (logging interface, AG-UI event logger, UTF-8 SSE decoder, and read/write streams).
+- `src/Client/Components/Pages/Models.razor`: AI model catalogue listing.
+- `src/Client/Services/`: AG-UI communication, settings, a SignalR connection per circuit, and the model catalogue API client.
+- `src/Middleware/`: shared `AGUIWebChat.Middleware` library (logging interface, AG-UI event logger, UTF-8 SSE decoder, and read/write streams).
 - `src/Client/Middleware/` and `src/Server/Middleware/`: application-specific HTTP integrations and adapters that preserve existing logging categories.
 - `src/Server/Agents/ChatAgentFactory.cs`: agent creation and instrumentation.
 - `src/Server/Inference/`: inference settings and validation.
 - `src/Server/Telemetry/`: response monitoring and metrics publication.
 - `src/Server/Hubs/`: SignalR connection handling.
+- `src/Server/Endpoints/`: model catalogue HTTP endpoints.
+- `src/Server/Services/AI/`: model catalogue operations and business validation.
+- `src/Server/Domain/AI/`: provider, model, default settings, and reasoning effort entities.
+- `src/Server/Data/` and `src/Server/Migrations/`: EF Core database context and SQL Server migrations.
+- `src/Server/Mapping/`: mappings between entities and API models.
 - `src/Contracts/`: DTOs shared by the server and client.
 - `tests/AGUIWebChat.Tests/`: automated tests.
+- `docs/`: project documentation.
+
+All paths and commands below are relative to the repository root, which contains `AGUIWebChat.slnx` and `global.json`.
 
 ## Getting Started
 
 Install the .NET 10 SDK and ensure an Ollama server is accessible with your chosen model already installed.
+
+The model catalogue also requires SQL Server with the application's migrations applied. The default connection string, `ConnectionStrings:ChatDatabase`, targets Windows SQL Server LocalDB. Configure it in the server's configuration files or override it with the `ConnectionStrings__ChatDatabase` environment variable for another SQL Server instance. SQLite is used only by the tests.
 
 In the first PowerShell terminal:
 
 ```powershell
 $env:OLLAMA_ENDPOINT="http://localhost:11434"
 $env:OLLAMA_MODEL="granite4.2:8b"
-dotnet run --project Server --launch-profile http
+dotnet run --project src/Server --launch-profile http
 ```
 
 `OLLAMA_ENDPOINT` is required. `OLLAMA_MODEL` defaults to `granite4.2:8b`. Choose a model that supports the reasoning settings you use.
@@ -34,30 +47,29 @@ In a second terminal:
 
 ```powershell
 $env:AGUI_SERVER_URL="http://localhost:5100"
-dotnet run --project Client --launch-profile http
+dotnet run --project src/Client --launch-profile http
 ```
 
 Open `http://localhost:5245`. The client's HTTPS profile uses `https://localhost:7219` and requires a trusted development certificate.
 
-The server exposes `/ag-ui` and `/telemetry`. The client uses `AGUI_SERVER_URL` for both connections. The **Stop** button cancels the current request; leaving the page also triggers cancellation.
+The server exposes `/ag-ui`, `/telemetry`, and `/api/models`. The client uses `AGUI_SERVER_URL` for chat, telemetry, and catalogue requests. Open `/models` in the client to view the catalogue. The **Stop** button cancels the current chat request; leaving the chat page also triggers cancellation.
 
 ## Settings and Telemetry
 
-Invalid settings fall back to their default values. Server-side limits are: 
+Invalid chat inference settings fall back to their default values. Server-side limits are:
 
-temperature 0–2
-top-p 0–1
-top-k 1–1000
-context size 1k–128k
-
-And reasoning effort `low`, `medium`, or `high`. 
+- Temperature: 0–2.
+- Top-p: 0–1.
+- Top-k: 1–1000.
+- Context size: 1024–131072 tokens.
+- Reasoning effort: `low`, `medium`, or `high`, selectable in Settings or with the button next to **Send**.
 
 These application limits do not guarantee that the model or hardware can support the selected values.
 Each Blazor circuit has its own connection and randomly generated telemetry channel, which is retained across SignalR reconnections. The server publishes only to that channel, without broadcasting to all clients. This mechanism separates circuits; it does not replace user authentication. Metrics are not replayed after a disconnection. A publication failure must not interrupt the model's response.
 
-Common settings are stored in `appsettings*.json`, and local launch profiles are in `Properties/launchSettings.json`. Keep secrets in environment variables or .NET user secrets. HTTP/SSE logs may contain conversations: configure logging levels and retention before shared use.
+Each application stores its settings in `src/Client/appsettings*.json` or `src/Server/appsettings*.json`, with launch profiles in its `Properties/launchSettings.json` file. Keep secrets in environment variables or .NET user secrets. HTTP/SSE logs may contain conversations: configure logging levels and retention before shared use.
 
-## Building and Testing
+## Model Catalogue API
 
 The model catalogue API (`/api/models`) returns errors as `application/problem+json`:
 
@@ -67,7 +79,10 @@ The model catalogue API (`/api/models`) returns errors as `application/problem+j
 - `500`: an unexpected error, with a neutral public message and a trace ID; internal details are logged on the server.
 
 Deleting an absent model remains idempotent and returns `204`.
-API tests supply their own Ollama configuration and an in-memory SQLite database. They do not use a local Ollama instance or require `OLLAMA_ENDPOINT` / `OLLAMA_MODEL` environment variables.
+
+## Building and Testing
+
+Run the following commands from the repository root:
 
 ```powershell
 dotnet restore AGUIWebChat.slnx
@@ -75,7 +90,9 @@ dotnet build AGUIWebChat.slnx --configuration Release --no-restore
 dotnet test --solution AGUIWebChat.slnx --configuration Release --no-build
 ```
 
-The tests use xUnit v3 with Microsoft Testing Platform, configured in `global.json`. They do not require Ollama. They cover invalid settings, fragmented SSE decoding, cancellation, and read errors, among other cases.
+The tests use xUnit v3 with Microsoft Testing Platform, configured in `global.json`. API tests supply their own Ollama configuration and an in-memory SQLite database. They require neither a running Ollama or SQL Server instance nor `OLLAMA_ENDPOINT` / `OLLAMA_MODEL` environment variables.
+
+Coverage includes inference validation, fragmented SSE decoding, cancellation, read errors, telemetry, catalogue persistence, and API success and error responses. SQLite tests use `EnsureCreated`; they do not validate SQL Server migrations.
 
 ## Git
 
