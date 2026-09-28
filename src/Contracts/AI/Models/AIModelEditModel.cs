@@ -1,4 +1,6 @@
-﻿namespace AGUIWebChat.Contracts.AI.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace AGUIWebChat.Contracts.AI.Models
 {
     public sealed class AIModelEditModel
     {
@@ -35,5 +37,6 @@
         public List<ReasoningEffortEditModel> ReasoningEfforts { get; set; } = [];
 
         public bool IsEnabled { get; set; } = true;
+
     }
 }

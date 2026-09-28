@@ -1,0 +1,285 @@
+﻿@using AGUIWebChat.Contracts.AI
+@using AGUIWebChat.Contracts.AI.Models
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<FluentDialogBody> 
+
+    <FluentStack Orientation="Orientation.Vertical" Gap="16">
+
+        <FluentDivider />
+
+        <br />
+        <h4 class="brand-text">AI Model</h4>
+
+        <FluentTextInput Label="Provider"
+                         Value="@Model.ProviderName"
+                         ReadOnly="true" />
+
+        <FluentTextInput Label="Model ID"
+                         @bind-Value="Model.ModelId"
+                         @bind-Value:after="UpdateSaveButton" />
+
+        <FluentTextInput Label="Display name"
+                         @bind-Value="Model.DisplayName"
+                         @bind-Value:after="UpdateSaveButton" />
+
+        <FluentDivider />
+
+        <br />
+        <h4 class="brand-text">Capabilities</h4>
+
+        <FluentStack Orientation="Orientation.Horizontal" Gap="20">
+
+            <FluentCheckbox Shape="@CheckboxShape.Circular"
+                            Label="Tools"
+                            @bind-Value="Model.SupportsTools">
+            </FluentCheckbox>
+
+            <FluentCheckbox Shape="@CheckboxShape.Circular"
+                            Label="Streaming"
+                            @bind-Value="Model.SupportsStreaming">
+            </FluentCheckbox>
+
+            <FluentCheckbox Shape="@CheckboxShape.Circular"
+                            Label="Vision"
+                            @bind-Value="Model.SupportsVision">
+            </FluentCheckbox>
+
+        </FluentStack>
+
+        <FluentLabel Typo="Typography.PaneHeader">
+            Reasoning
+        </FluentLabel>
+
+        <FluentSelect Label="Thinking mode"
+                      Items="@_thinkingModes"
+                      @bind-Value="Model.ThinkingMode"
+                      @bind-Value:after="UpdateSaveButton" />
+
+        @if (Model.ThinkingMode == ThinkingMode.Effort)
+        {
+            <FluentStack Orientation="Orientation.Vertical" Gap="12">
+
+                <FluentLabel Typo="Typography.Body">
+                    Reasoning efforts
+                </FluentLabel>
+
+                @if (!IsReasoningValid())
+                {
+                    <br />
+                    <FluentMessageBar Intent="MessageBarIntent.Warning">
+                        Add at least one effort level, fill in its name
+                        and value, and select exactly one default level.
+                    </FluentMessageBar>
+                    <br />
+                }
+
+                @foreach (var effort in Model.ReasoningEfforts.OrderBy(x => x.SortOrder).ToList())
+                {
+                    <div @key="effort">
+
+                        <FluentStack Orientation="Orientation.Horizontal" Gap="8">
+
+                            <FluentTextInput Label="Name"
+                                             @bind-Value="effort.DisplayName"
+                                             @bind-Value:after="UpdateSaveButton" />
+
+                            <FluentTextInput Label="Value"
+                                             @bind-Value="effort.Value"
+                                             @bind-Value:after="UpdateSaveButton" />
+
+                            <FluentNumberInput Label="Order"
+                                               @bind-Value="effort.SortOrder" />
+
+                            <FluentCheckbox Value="@effort.IsDefault"
+                                            ValueChanged="@((bool value) => SetDefaultEffort(effort, value))">
+                                Default
+                            </FluentCheckbox>
+
+                            <FluentButton Appearance="ButtonAppearance.Primary"
+                                          IconStart="@(new Icons.Regular.Size20.Delete())"
+                                          OnClick="@(() => RemoveEffort(effort))" />
+
+                        </FluentStack>
+
+                    </div>
+                }
+
+                <FluentButton Appearance="ButtonAppearance.Primary"
+                              IconStart="@(new Icons.Regular.Size20.Add())"
+                              OnClick="AddEffort">
+                    Add a level
+                </FluentButton>
+
+            </FluentStack>
+        }
+        else if (Model.ThinkingMode == ThinkingMode.OnOff)
+        {
+            <FluentMessageBar Intent="MessageBarIntent.Info">
+                Reasoning for this model can be enabled or disabled.
+            </FluentMessageBar>
+        }
+
+        <br />
+        <FluentDivider />
+
+        <br />
+        <h4 class="brand-text">Token configuration</h4>
+
+        <FluentNumberInput Label="Context window"
+                           @bind-Value="Model.ContextWindow" />
+
+        <FluentNumberInput Label="Max output tokens"
+                           @bind-Value="Model.MaxOutputTokens" />
+
+        <FluentDivider />
+
+        <br />
+        <h4 class="brand-text">Default parameters</h4>
+
+        <FluentNumberInput Label="Temperature"
+                           Step="0.1"
+                           @bind-Value="Model.Temperature" />
+
+        <FluentNumberInput Label="Top P"
+                           Step="0.1"
+                           @bind-Value="Model.TopP" />
+
+        <FluentNumberInput Label="Top K"
+                           @bind-Value="Model.TopK" />
+
+        <FluentNumberInput Label="Num Ctx"
+                           @bind-Value="Model.NumCtx" />
+
+        <FluentDivider />
+
+        <FluentCheckbox @bind-Value="Model.IsEnabled">
+            Enabled
+        </FluentCheckbox>
+
+    </FluentStack>
+
+</FluentDialogBody>
+
+@code
+{
+    [Parameter]
+    public AIModelEditModel Model { get; set; } = new();
+
+    private readonly IEnumerable<ThinkingMode> _thinkingModes = Enum.GetValues<ThinkingMode>();
+
+    [CascadingParameter]
+    public IDialogInstance? DialogInstance { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (DialogInstance is not null)
+        {
+            DialogInstance.Options.Header.Title = $"Edit {Model.DisplayName}";
+            DialogInstance.Options.Header.CloseAction.Visible = true;
+            DialogInstance.Options.Footer.PrimaryAction.Disabled = !IsValid();
+        }
+    }
+
+    private void UpdateSaveButton()
+    {
+        if (DialogInstance is null)
+            return;
+
+        DialogInstance.Options.Footer.PrimaryAction.Disabled = !IsValid();
+    }
+
+    private void AddEffort()
+    {
+        var nextSortOrder = Model.ReasoningEfforts.Count == 0
+            ? 10
+            : Model.ReasoningEfforts.Max(x => x.SortOrder) + 10;
+
+        Model.ReasoningEfforts.Add(new ReasoningEffortEditModel
+        {
+            SortOrder = nextSortOrder,
+            IsDefault = Model.ReasoningEfforts.Count == 0
+        });
+
+        UpdateSaveButton();
+    }
+
+    private void RemoveEffort(ReasoningEffortEditModel effort)
+    {
+        var wasDefault = effort.IsDefault;
+
+        Model.ReasoningEfforts.Remove(effort);
+
+        if (wasDefault && Model.ReasoningEfforts.Count > 0)
+        {
+            var newDefault = Model.ReasoningEfforts
+                .OrderBy(x => x.SortOrder)
+                .First();
+
+            newDefault.IsDefault = true;
+        }
+
+        UpdateSaveButton();
+    }
+
+    private void SetDefaultEffort(ReasoningEffortEditModel effort, bool value)
+    {
+        if (!value)
+        {
+            effort.IsDefault = false;
+            UpdateSaveButton();
+            return;
+        }
+
+        foreach (var item in Model.ReasoningEfforts)
+        {
+            item.IsDefault = ReferenceEquals(item, effort);
+        }
+
+        UpdateSaveButton();
+    }
+
+    private bool IsValid()
+    {
+        if (string.IsNullOrWhiteSpace(Model.ModelId))
+            return false;
+
+        if (string.IsNullOrWhiteSpace(Model.DisplayName))
+            return false;
+
+        if (Model.ThinkingMode != ThinkingMode.Effort)
+            return true;
+
+        if (Model.ReasoningEfforts.Count == 0)
+            return false;
+
+        if (Model.ReasoningEfforts.Any(x => string.IsNullOrWhiteSpace(x.DisplayName)))
+        {
+            return false;
+        }
+
+        if (Model.ReasoningEfforts.Any(x => string.IsNullOrWhiteSpace(x.Value)))
+        {
+            return false;
+        }
+
+        if (Model.ReasoningEfforts.Count(x => x.IsDefault) != 1)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool IsReasoningValid()
+    {
+        if (Model.ThinkingMode != ThinkingMode.Effort)
+            return true;
+
+        return
+            Model.ReasoningEfforts.Count > 0 &&
+            Model.ReasoningEfforts.All(x => !string.IsNullOrWhiteSpace(x.DisplayName)) &&
+            Model.ReasoningEfforts.All(x => !string.IsNullOrWhiteSpace(x.Value)) &&
+            Model.ReasoningEfforts.Count(x => x.IsDefault) == 1;
+    }
+}

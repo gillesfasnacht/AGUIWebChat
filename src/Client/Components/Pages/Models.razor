@@ -2,8 +2,11 @@
 
 @using AGUIWebChat.Contracts.AI.Models
 @using AGUIWebChat.Client.Services.AI
+@using AGUIWebChat.Client.Components.AI
+@using Microsoft.FluentUI.AspNetCore.Components
 
 @inject AIModelApiClient ModelApiClient
+@inject IDialogService DialogService
 
 <PageTitle>AI Models</PageTitle>
 
@@ -23,15 +26,17 @@ else if (_errorMessage is not null)
 }
 else
 {
-    <FluentDataGrid Items="@_models.AsQueryable()">
+    <FluentDataGrid TGridItem="AIModelEditModel"
+                    Items="@_models.AsQueryable()"
+                    ShowHover="true"
+                    ReorderableColumns="true"
+                    HeaderCellAsButtonWithMenu="true"
+                    ResizableColumns="true">
+
         <PropertyColumn Property="@(x => x.ProviderName)" Title="Provider" />
-
         <PropertyColumn Property="@(x => x.DisplayName)" Title="Model" />
-
         <PropertyColumn Property="@(x => x.ModelId)" Title="Model ID" />
-
         <PropertyColumn Property="@(x => x.ThinkingMode)" Title="Thinking" />
-
         <PropertyColumn Property="@(x => x.ContextWindow)" Title="Context" />
 
         <TemplateColumn Title="Enabled">
@@ -45,7 +50,19 @@ else
                     <FluentIcon Value="@(new Icons.Regular.Size20.DismissCircle())" />
                 }
             </ChildContent>
+
         </TemplateColumn>
+
+        <TemplateColumn Title="Actions">
+            <ChildContent>
+                <FluentButton Appearance="ButtonAppearance.Primary"
+                              IconStart="@(new Icons.Regular.Size20.Edit())"
+                              OnClick="@(() => EditModelAsync(context))">
+                    Edit
+                </FluentButton>
+            </ChildContent>
+        </TemplateColumn>
+
     </FluentDataGrid>
 }
 
@@ -59,6 +76,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadModelsAsync();
+    }
+
+    private async Task LoadModelsAsync()
+    {
+        _loading = true;
+        _errorMessage = null;
+
         try
         {
             _models = await ModelApiClient.GetModelsAsync();
@@ -70,6 +95,47 @@ else
         finally
         {
             _loading = false;
+        }
+    }
+
+    private async Task EditModelAsync(AIModelEditModel model)
+    {
+        _errorMessage = null;
+
+        try
+        {
+            var currentModel = await ModelApiClient.GetModelAsync(model.Id);
+
+            if (currentModel is null)
+            {
+                _errorMessage = $"Le modèle {model.DisplayName} n'existe plus.";
+
+                return;
+            }
+
+            var result = await DialogService.ShowDrawerAsync<AIModelEditor>(options =>
+            {
+                options.Modal = true;
+
+                options.Alignment = DialogAlignment.End;
+
+                options.Parameters.Add(nameof(AIModelEditor.Model), currentModel);
+
+                options.Footer.PrimaryAction.Label = "Save";
+
+                options.Footer.SecondaryAction.Label = "Cancel";
+            });
+
+            if (result.Cancelled)
+                return;
+
+            await ModelApiClient.UpdateAsync(currentModel);
+
+            await LoadModelsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unable to update AI model: {ex.Message}";
         }
     }
 }

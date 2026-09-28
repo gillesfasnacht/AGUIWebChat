@@ -94,6 +94,12 @@ if (!builder.Environment.IsEnvironment("Testing"))
             ?? throw new InvalidOperationException("Connection string 'ChatDatabase' not found.");
 
         options.UseSqlServer(connectionString);
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.EnableSensitiveDataLogging();
+            options.EnableDetailedErrors();
+        }
     });
 }
 
