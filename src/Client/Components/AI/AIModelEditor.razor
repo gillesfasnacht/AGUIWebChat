@@ -1,5 +1,6 @@
 ﻿@using AGUIWebChat.Contracts.AI
 @using AGUIWebChat.Contracts.AI.Models
+@using AGUIWebChat.Contracts.AI.Providers
 @using Microsoft.FluentUI.AspNetCore.Components
 
 <FluentDialogBody> 
@@ -11,9 +12,23 @@
         <br />
         <h4 class="brand-text">AI Model</h4>
 
-        <FluentTextInput Label="Provider"
-                         Value="@Model.ProviderName"
-                         ReadOnly="true" />
+        @if (IsNew)
+        {
+            <FluentSelect TOption="AIProviderListItem"
+                          TValue="int"
+                          Label="Provider"
+                          Items="@Providers"
+                          OptionText="@(provider => provider.Name)"
+                          OptionValue="@(provider => provider.Id)"
+                          @bind-Value="Model.ProviderId"
+                          @bind-Value:after="ProviderChanged" />
+        }
+        else
+        {
+            <FluentTextInput Label="Provider"
+                             Value="@Model.ProviderName"
+                             ReadOnly="true" />
+        }
 
         <FluentTextInput Label="Model ID"
                          @bind-Value="Model.ModelId"
@@ -164,18 +179,32 @@
 @code
 {
     [Parameter]
-    public AIModelEditModel Model { get; set; } = new();
+    public bool IsNew { get; set; }
 
-    private readonly IEnumerable<ThinkingMode> _thinkingModes = Enum.GetValues<ThinkingMode>();
+    [Parameter]
+    public IReadOnlyList<AIProviderListItem> Providers { get; set; } = [];
+
+    [Parameter]
+    public AIModelEditModel Model { get; set; } = new();
 
     [CascadingParameter]
     public IDialogInstance? DialogInstance { get; set; }
 
+    private readonly IEnumerable<ThinkingMode> _thinkingModes = Enum.GetValues<ThinkingMode>();
+
     protected override void OnInitialized()
     {
+        if (IsNew && Model.ProviderId <= 0 && Providers.Count > 0)
+        {
+            var provider = Providers[0];
+
+            Model.ProviderId = provider.Id;
+            Model.ProviderName = provider.Name;
+        }
+
         if (DialogInstance is not null)
         {
-            DialogInstance.Options.Header.Title = $"Edit {Model.DisplayName}";
+            DialogInstance.Options.Header.Title = IsNew ? "Add Model" : $"Edit {Model.DisplayName}";
             DialogInstance.Options.Header.CloseAction.Visible = true;
             DialogInstance.Options.Footer.PrimaryAction.Disabled = !IsValid();
         }
@@ -241,6 +270,9 @@
 
     private bool IsValid()
     {
+        if (IsNew && Model.ProviderId <= 0)
+            return false;
+
         if (string.IsNullOrWhiteSpace(Model.ModelId))
             return false;
 
@@ -281,5 +313,14 @@
             Model.ReasoningEfforts.All(x => !string.IsNullOrWhiteSpace(x.DisplayName)) &&
             Model.ReasoningEfforts.All(x => !string.IsNullOrWhiteSpace(x.Value)) &&
             Model.ReasoningEfforts.Count(x => x.IsDefault) == 1;
+    }
+
+    private void ProviderChanged()
+    {
+        var provider = Providers.FirstOrDefault(x => x.Id == Model.ProviderId);
+
+        Model.ProviderName = provider?.Name ?? string.Empty;
+
+        UpdateSaveButton();
     }
 }

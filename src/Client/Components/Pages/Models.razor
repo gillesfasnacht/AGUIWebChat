@@ -1,11 +1,13 @@
 ﻿@page "/models"
 
+@using AGUIWebChat.Contracts.AI
 @using AGUIWebChat.Contracts.AI.Models
 @using AGUIWebChat.Client.Services.AI
 @using AGUIWebChat.Client.Components.AI
 @using Microsoft.FluentUI.AspNetCore.Components
 
 @inject AIModelApiClient ModelApiClient
+@inject AIProviderApiClient ProviderApiClient
 @inject IDialogService DialogService
 
 <PageTitle>AI Models</PageTitle>
@@ -26,6 +28,17 @@ else if (_errorMessage is not null)
 }
 else
 {
+    <FluentStack Orientation="Orientation.Horizontal"
+                 HorizontalAlignment="HorizontalAlignment.End">
+
+        <FluentButton Appearance="ButtonAppearance.Primary"
+                      IconStart="@(new Icons.Regular.Size20.Add())"
+                      OnClick="AddModelAsync">
+            Add a model
+        </FluentButton>
+
+    </FluentStack>
+
     <FluentDataGrid TGridItem="AIModelEditModel"
                     Items="@_models.AsQueryable()"
                     ShowHover="true"
@@ -50,19 +63,22 @@ else
                     <FluentIcon Value="@(new Icons.Regular.Size20.DismissCircle())" />
                 }
             </ChildContent>
-
         </TemplateColumn>
 
         <TemplateColumn Title="Actions">
             <ChildContent>
                 <FluentButton Appearance="ButtonAppearance.Primary"
                               IconStart="@(new Icons.Regular.Size20.Edit())"
+                              Title="Edit"
                               OnClick="@(() => EditModelAsync(context))">
-                    Edit
+                </FluentButton>
+                <FluentButton Appearance="ButtonAppearance.Default"
+                              IconStart="@(new Icons.Regular.Size20.Delete())"
+                              Title="Delete"
+                              OnClick="@(() => DeleteModelAsync(context))">
                 </FluentButton>
             </ChildContent>
         </TemplateColumn>
-
     </FluentDataGrid>
 }
 
@@ -98,6 +114,51 @@ else
         }
     }
 
+    private async Task AddModelAsync()
+    {
+        _errorMessage = null;
+
+        try
+        {
+            var providers = await ProviderApiClient.GetProvidersAsync();
+
+            if (providers.Count == 0)
+            {
+                _errorMessage = "No active AI provider is available.";
+
+                return;
+            }
+
+            var newModel = new AIModelEditModel
+            {
+                IsEnabled = true,
+                ThinkingMode = ThinkingMode.None
+            };
+
+            var result = await DialogService.ShowDrawerAsync<AIModelEditor>(options =>
+            {
+                options.Modal = true;
+                options.Alignment = DialogAlignment.End;
+                options.Parameters.Add(nameof(AIModelEditor.Model), newModel);
+                options.Parameters.Add(nameof(AIModelEditor.IsNew), true);
+                options.Parameters.Add(nameof(AIModelEditor.Providers), providers);
+                options.Footer.PrimaryAction.Label = "Add";
+                options.Footer.SecondaryAction.Label = "Cancel";
+            });
+
+            if (result.Cancelled)
+                return;
+
+            await ModelApiClient.CreateAsync(newModel);
+
+            await LoadModelsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unable to create AI model: {ex.Message}";
+        }
+    }
+
     private async Task EditModelAsync(AIModelEditModel model)
     {
         _errorMessage = null;
@@ -108,7 +169,7 @@ else
 
             if (currentModel is null)
             {
-                _errorMessage = $"Le modèle {model.DisplayName} n'existe plus.";
+                _errorMessage = $"The model {model.DisplayName} no longer exists.";
 
                 return;
             }
@@ -136,6 +197,31 @@ else
         catch (Exception ex)
         {
             _errorMessage = $"Unable to update AI model: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteModelAsync(AIModelEditModel model)
+    {
+        _errorMessage = null;
+
+        var result = await DialogService.ShowConfirmationAsync(
+            $"Do you really want to delete the model « {model.DisplayName} » ?",
+            "Deleting an AI model", 
+            "Deletion Confirmation",
+            "Cancel");
+
+        if (result.Cancelled)
+            return;
+
+        try
+        {
+            await ModelApiClient.DeleteAsync(model.Id);
+
+            await LoadModelsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unable to delete AI model: {ex.Message}";
         }
     }
 }

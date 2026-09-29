@@ -40,7 +40,15 @@ Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().Proc
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddFluentUIComponents();
 builder.Services.AddScoped(_ => new TelemetryService(new Uri(new Uri(serverUrl), "/telemetry").ToString()));
+
+// Add HttpClient for AIModelApiClient (/api/models)
 builder.Services.AddHttpClient<AIModelApiClient>(client =>
+{
+    client.BaseAddress = new Uri(serverUrl);
+});
+
+// Add HttpClient for AIProviderApiClient (/api/providers/{id})
+builder.Services.AddHttpClient<AIProviderApiClient>(client =>
 {
     client.BaseAddress = new Uri(serverUrl);
 });

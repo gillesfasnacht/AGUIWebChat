@@ -13,7 +13,6 @@
         <h4 class="brand-text">Reasoning</h4>
 
         <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
-
             <FluentSelect TOption="ReasoningDisplayMode"
                           TValue="ReasoningDisplayMode"
                           Label="Reasoning display"
@@ -28,13 +27,11 @@
                         @mode
                     </FluentOption>
                 }
-
             </FluentSelect>
 
         </FluentStack>
     
         <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
-
             <FluentSelect TOption="ThinkingEffort"
                           TValue="ThinkingEffort"
                           Label="Thinking effort"
@@ -51,14 +48,12 @@
                 }
 
             </FluentSelect>
-
         </FluentStack>
 
         <br />
         <h4 class="brand-text">Monitoring</h4>
 
         <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
-
             <FluentSelect TOption="MonitoringDisplayMode"
                           TValue="MonitoringDisplayMode"
                           Label="Monitoring display"
@@ -75,7 +70,6 @@
 
                 }
             </FluentSelect>
-
         </FluentStack>
 
         <FluentCheckbox @bind-Value="Settings.Monitoring.ShowAdvancedMetrics">
@@ -86,7 +80,6 @@
         <h4 class="brand-text">Sampling</h4>
 
         <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
-
             <FluentNumberInput TValue="double"
                                Label="Temperature"
                                Style="width: 100%;"
@@ -94,7 +87,6 @@
                                Min="0"
                                Max="2"
                                Step="0.1" />
-
         </FluentStack>
 
         <div class="brand-text">
@@ -102,7 +94,6 @@
         </div>
 
         <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
-
             <FluentNumberInput TValue="double"
                                Label="Top P"
                                Style="width: 100%;"
@@ -110,7 +101,6 @@
                                Min="0"
                                Max="1"
                                Step="0.05" />
-                           
         </FluentStack>
 
         <div class="brand-text">
@@ -118,14 +108,12 @@
         </div>
 
         <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
-
             <FluentNumberInput TValue="int"
                                Label="Top K"
                                Style="width: 100%;"
                                @bind-Value="Settings.TopK"
                                Min="1"
                                Step="1" />
-
         </FluentStack>
 
         <div class="brand-text">
@@ -133,14 +121,12 @@
         </div>
 
         <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
-
             <FluentNumberInput TValue="int"
                                Label="Context size"
                                Style="width: 100%;"
                                @bind-Value="Settings.NumCtx"
                                Min="1024"
                                Step="1024" />
-
         </FluentStack>
 
         <div class="brand-text">

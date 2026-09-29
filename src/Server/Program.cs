@@ -154,6 +154,7 @@ app.UseMiddleware<SseLoggingMiddleware>();
 app.MapAGUIServer("/ag-ui", enterpriseAgent);
 
 app.MapAIModelEndpoints();
+app.MapAIProviderEndpoints();
 
 await app.RunAsync();
 
