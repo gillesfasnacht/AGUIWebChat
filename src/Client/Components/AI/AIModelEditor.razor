@@ -5,45 +5,50 @@
 
 <FluentDialogBody> 
 
-    <FluentStack Orientation="Orientation.Vertical" Gap="16">
+    <FluentStack Orientation="Orientation.Vertical" 
+                 VerticalGap="12">
 
         <FluentDivider />
 
-        <br />
-        <h4 class="brand-text">AI Model</h4>
+        <h4 class="brand-text">Model</h4>    
+            
+        <FluentStack Orientation="Orientation.Horizontal"
+                     HorizontalGap="12"
+                     VerticalAlignment="VerticalAlignment.Center">
 
-        @if (IsNew)
-        {
-            <FluentSelect TOption="AIProviderListItem"
-                          TValue="int"
-                          Label="Provider"
-                          Items="@Providers"
-                          OptionText="@(provider => provider.Name)"
-                          OptionValue="@(provider => provider.Id)"
-                          @bind-Value="Model.ProviderId"
-                          @bind-Value:after="ProviderChanged" />
-        }
-        else
-        {
-            <FluentTextInput Label="Provider"
-                             Value="@Model.ProviderName"
-                             ReadOnly="true" />
-        }
+            @if (IsNew)
+            {
+                <FluentSelect TOption="AIProviderListItem"
+                              TValue="int"
+                              Label="Provider"
+                              Items="@Providers"
+                              OptionText="@(provider => provider.Name)"
+                              OptionValue="@(provider => provider.Id)"
+                              @bind-Value="Model.ProviderId"
+                              @bind-Value:after="ProviderChanged" />
+            }
+            else
+            {
+                <FluentTextInput Label="Provider"
+                                 Value="@Model.ProviderName"
+                                 ReadOnly="true" />
+            }
 
-        <FluentTextInput Label="Model ID"
-                         @bind-Value="Model.ModelId"
-                         @bind-Value:after="UpdateSaveButton" />
+            <FluentTextInput Label="Model ID"
+                             @bind-Value="Model.ModelId"
+                             @bind-Value:after="UpdateSaveButton" />
 
-        <FluentTextInput Label="Display name"
-                         @bind-Value="Model.DisplayName"
-                         @bind-Value:after="UpdateSaveButton" />
+            <FluentTextInput Label="Display name"
+                             @bind-Value="Model.DisplayName"
+                             @bind-Value:after="UpdateSaveButton" />
 
-        <FluentDivider />
+        </FluentStack>
 
-        <br />
         <h4 class="brand-text">Capabilities</h4>
 
-        <FluentStack Orientation="Orientation.Horizontal" Gap="20">
+        <FluentStack Orientation="Orientation.Horizontal"
+                     HorizontalGap="12"
+                     VerticalAlignment="VerticalAlignment.Center">
 
             <FluentCheckbox Shape="@CheckboxShape.Circular"
                             Label="Tools"
@@ -62,9 +67,7 @@
 
         </FluentStack>
 
-        <FluentLabel Typo="Typography.PaneHeader">
-            Reasoning
-        </FluentLabel>
+        <h4 class="brand-text">Reasoning</h4>
 
         <FluentSelect Label="Thinking mode"
                       Items="@_thinkingModes"
@@ -73,7 +76,8 @@
 
         @if (Model.ThinkingMode == ThinkingMode.Effort)
         {
-            <FluentStack Orientation="Orientation.Vertical" Gap="12">
+            <FluentStack Orientation="Orientation.Vertical" 
+                         VerticalGap="12">
 
                 <FluentLabel Typo="Typography.Body">
                     Reasoning efforts
@@ -81,19 +85,18 @@
 
                 @if (!IsReasoningValid())
                 {
-                    <br />
                     <FluentMessageBar Intent="MessageBarIntent.Warning">
-                        Add at least one effort level, fill in its name
-                        and value, and select exactly one default level.
+                        Add at least one effort level, fill in its name and value, and select exactly one default level.
                     </FluentMessageBar>
-                    <br />
                 }
 
                 @foreach (var effort in Model.ReasoningEfforts.OrderBy(x => x.SortOrder).ToList())
                 {
                     <div @key="effort">
 
-                        <FluentStack Orientation="Orientation.Horizontal" Gap="8">
+                        <FluentStack Orientation="Orientation.Horizontal"
+                                     HorizontalGap="12"
+                                     VerticalAlignment="VerticalAlignment.Center">
 
                             <FluentTextInput Label="Name"
                                              @bind-Value="effort.DisplayName"
@@ -135,38 +138,45 @@
             </FluentMessageBar>
         }
 
-        <br />
-        <FluentDivider />
-
-        <br />
         <h4 class="brand-text">Token configuration</h4>
 
-        <FluentNumberInput Label="Context window"
-                           @bind-Value="Model.ContextWindow" />
+        <FluentStack Orientation="Orientation.Horizontal"
+                     HorizontalGap="12"
+                     VerticalAlignment="VerticalAlignment.Center">
+                                     
+            <FluentNumberInput Label="Context window"
+                               @bind-Value="Model.ContextWindow" />
 
-        <FluentNumberInput Label="Max output tokens"
-                           @bind-Value="Model.MaxOutputTokens" />
+            <FluentNumberInput Label="Max output tokens"
+                               @bind-Value="Model.MaxOutputTokens" />
 
-        <FluentDivider />
+        </FluentStack>
 
-        <br />
         <h4 class="brand-text">Default parameters</h4>
 
-        <FluentNumberInput Label="Temperature"
-                           Step="0.1"
-                           @bind-Value="Model.Temperature" />
+        <FluentStack Orientation="Orientation.Horizontal"
+                        HorizontalGap="10">
 
-        <FluentNumberInput Label="Top P"
-                           Step="0.1"
-                           @bind-Value="Model.TopP" />
+            <FluentNumberInput Label="Temperature"
+                               Step="0.1"
+                               @bind-Value="Model.Temperature" />
 
-        <FluentNumberInput Label="Top K"
-                           @bind-Value="Model.TopK" />
+            <FluentNumberInput Label="Num Ctx"
+                               @bind-Value="Model.NumCtx" />
 
-        <FluentNumberInput Label="Num Ctx"
-                           @bind-Value="Model.NumCtx" />
+        </FluentStack>
+        
+        <FluentStack Orientation="Orientation.Horizontal"
+                     HorizontalGap="10">
 
-        <FluentDivider />
+            <FluentNumberInput Label="Top P"
+                               Step="0.1"
+                               @bind-Value="Model.TopP" />
+
+            <FluentNumberInput Label="Top K"
+                               @bind-Value="Model.TopK" />
+
+        </FluentStack>
 
         <FluentCheckbox @bind-Value="Model.IsEnabled">
             Enabled

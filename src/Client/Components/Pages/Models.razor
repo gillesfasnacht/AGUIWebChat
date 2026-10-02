@@ -12,12 +12,15 @@
 
 <PageTitle>AI Models</PageTitle>
 
-<h1>AI Models</h1>
+<h1>Models</h1>
 
 <p>Manage the AI models available to agents.</p>
 
+<FluentDivider />
+
 @if (_loading)
 {
+    <br />
     <FluentSpinner />
 }
 else if (_errorMessage is not null)
@@ -28,13 +31,27 @@ else if (_errorMessage is not null)
 }
 else
 {
-    <FluentStack Orientation="Orientation.Horizontal"
-                 HorizontalAlignment="HorizontalAlignment.End">
+    <FluentStack Padding="@Padding.Vertical2"
+                 HorizontalAlignment="HorizontalAlignment.Left">
 
         <FluentButton Appearance="ButtonAppearance.Primary"
                       IconStart="@(new Icons.Regular.Size20.Add())"
                       OnClick="AddModelAsync">
-            Add a model
+            Add
+        </FluentButton>
+
+        <FluentButton IconStart="@(new Icons.Regular.Size20.Edit())"
+                      OnClick="@(() => EditModelAsync(SelectedItems.First()))"
+                      Margin="@Margin.Horizontal2"
+                      Disabled="@(SelectedItems.Count() != 1)">
+            Edit
+        </FluentButton>   
+        
+        <FluentButton IconStart="@(new Icons.Regular.Size20.Delete())"
+                      OnClick="@(() => DeleteModelAsync(SelectedItems.First()))"
+                      Margin="@Margin.Horizontal2"
+                      Disabled="@(SelectedItems.Count() == 0)">
+            Delete
         </FluentButton>
 
     </FluentStack>
@@ -45,6 +62,11 @@ else
                     ReorderableColumns="true"
                     HeaderCellAsButtonWithMenu="true"
                     ResizableColumns="true">
+        
+        <SelectColumn TGridItem="AIModelEditModel"
+                            SelectMode="@DataGridSelectMode.Single"
+                            SelectFromEntireRow="true"
+                            @bind-SelectedItems="@SelectedItems" />
 
         <PropertyColumn Property="@(x => x.ProviderName)" Title="Provider" />
         <PropertyColumn Property="@(x => x.DisplayName)" Title="Model" />
@@ -65,26 +87,14 @@ else
             </ChildContent>
         </TemplateColumn>
 
-        <TemplateColumn Title="Actions">
-            <ChildContent>
-                <FluentButton Appearance="ButtonAppearance.Primary"
-                              IconStart="@(new Icons.Regular.Size20.Edit())"
-                              Title="Edit"
-                              OnClick="@(() => EditModelAsync(context))">
-                </FluentButton>
-                <FluentButton Appearance="ButtonAppearance.Default"
-                              IconStart="@(new Icons.Regular.Size20.Delete())"
-                              Title="Delete"
-                              OnClick="@(() => DeleteModelAsync(context))">
-                </FluentButton>
-            </ChildContent>
-        </TemplateColumn>
     </FluentDataGrid>
 }
 
 @code
 {
     private IReadOnlyList<AIModelEditModel> _models = [];
+
+    private IEnumerable<AIModelEditModel> SelectedItems = [];
 
     private bool _loading = true;
 
@@ -224,4 +234,20 @@ else
             _errorMessage = $"Unable to delete AI model: {ex.Message}";
         }
     }
+
+    private async Task OpenEditAsync(AIModelEditModel item)
+    {
+        var result = await DialogService.ShowDialogAsync<AIModelEditor>(options =>
+        {
+            //options.Parameters.Add(nameof(AIModelEditor.Model), item.Clone());
+            options.Header.CloseAction.Visible = true;
+            options.Alignment = DialogAlignment.End;
+        });
+
+        if (!result.Cancelled && result.Value is AIModelEditModel updated)
+        {
+            //ModelApiClient.Update(updated);
+        }
+    }
+
 }

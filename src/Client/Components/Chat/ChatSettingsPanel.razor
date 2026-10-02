@@ -4,12 +4,15 @@
 @inject ChatSettingsService SettingsService
 
 <FluentDialogBody>
-    <EditForm Model="@Settings" novalidate="true">
+
+    <FluentStack Orientation="Orientation.Vertical" 
+                 VerticalGap="12">
+    
+        <EditForm Model="@Settings" novalidate="true">
         <DataAnnotationsValidator />
         
         <FluentDivider />
 
-        <br />
         <h4 class="brand-text">Reasoning</h4>
 
         <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
@@ -50,7 +53,6 @@
             </FluentSelect>
         </FluentStack>
 
-        <br />
         <h4 class="brand-text">Monitoring</h4>
 
         <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
@@ -76,7 +78,6 @@
             Show advanced metrics
         </FluentCheckbox>
 
-        <br />
         <h4 class="brand-text">Sampling</h4>
 
         <FluentStack Style="padding: 0 4px; box-sizing: border-box;">
@@ -133,10 +134,6 @@
             Maximum model context window size.
         </div>
 
-        <br />
-        <FluentDivider />
-        <br />
-
         <FluentStack HorizontalGap="8px" Margin="@Margin.Top4">
             <FluentButton Appearance="ButtonAppearance.Primary"
                           Type="ButtonType.Reset"
@@ -146,7 +143,9 @@
             </FluentButton>
         </FluentStack>
 
-    </EditForm>
+        </EditForm>
+
+    </FluentStack>
     
 </FluentDialogBody>
 
