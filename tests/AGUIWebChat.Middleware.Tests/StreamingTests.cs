@@ -2,7 +2,7 @@ using AGUIWebChat.Middleware;
 using System.Text;
 using Xunit;
 
-namespace AGUIWebChat.Tests;
+namespace AGUIWebChat.Middleware.Tests;
 
 public class StreamingTests
 {

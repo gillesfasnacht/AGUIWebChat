@@ -1,0 +1,20 @@
+<Project>
+  <!-- Generate a portable configuration for MTP, including Visual Studio Test Explorer. -->
+  <Target Name="GenerateSharedTestResultsConfiguration" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <_SharedTestConfigPath>$(IntermediateOutputPath)shared.testconfig.json</_SharedTestConfigPath>
+      <_TestResultsJsonPath>$(TestResultsDirectory.Replace('\', '/'))</_TestResultsJsonPath>
+    </PropertyGroup>
+    <MakeDir Directories="$(IntermediateOutputPath)" />
+    <WriteLinesToFile File="$(_SharedTestConfigPath)"
+                      Lines="{ &quot;platformOptions&quot;: { &quot;resultDirectory&quot;: &quot;$(_TestResultsJsonPath)&quot; } }"
+                      Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+    <ItemGroup>
+      <None Include="$(_SharedTestConfigPath)"
+            TargetPath="$(AssemblyName).testconfig.json"
+            CopyToOutputDirectory="PreserveNewest"
+            CopyToPublishDirectory="PreserveNewest" />
+      <FileWrites Include="$(_SharedTestConfigPath)" />
+    </ItemGroup>
+  </Target>
+</Project>

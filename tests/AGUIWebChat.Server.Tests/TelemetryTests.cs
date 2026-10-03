@@ -4,7 +4,7 @@ using AGUIWebChat.Server.Telemetry;
 using Microsoft.AspNetCore.SignalR;
 using Xunit;
 
-namespace AGUIWebChat.Tests;
+namespace AGUIWebChat.Server.Tests;
 
 public class TelemetryTests
 {

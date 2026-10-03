@@ -2,7 +2,7 @@ using System.Text.Json;
 using AGUIWebChat.Server.Inference;
 using Xunit;
 
-namespace AGUIWebChat.Tests;
+namespace AGUIWebChat.Server.Tests;
 
 public class InferenceTests
 {

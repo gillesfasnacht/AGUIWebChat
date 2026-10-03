@@ -1,4 +1,4 @@
-﻿using AGUIWebChat.Server;
+using AGUIWebChat.Server;
 using AGUIWebChat.Server.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 
-namespace AGUIWebChat.Tests.Infrastructure
+namespace AGUIWebChat.Server.Tests.Infrastructure
 {
     public sealed class AGUIWebChatWebApplicationFactory : WebApplicationFactory<AGUIWebChatServerMarker>
     {

@@ -1,7 +1,7 @@
-﻿using AGUIWebChat.Contracts.AI;
+using AGUIWebChat.Contracts.AI;
 using AGUIWebChat.Contracts.AI.Models;
 using AGUIWebChat.Server.Services.AI;
-using AGUIWebChat.Tests.Infrastructure;
+using AGUIWebChat.Server.Tests.Infrastructure;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -12,7 +12,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Xunit;
 
-namespace AGUIWebChat.Tests.Services.Endpoints
+namespace AGUIWebChat.Server.Tests.Services.Endpoints
 {
     public sealed class AIModelEndpointsTests
     {

@@ -1,8 +1,8 @@
-﻿using AGUIWebChat.Server.Data;
+using AGUIWebChat.Server.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-namespace AGUIWebChat.Tests.Infrastructure
+namespace AGUIWebChat.Server.Tests.Infrastructure
 {
     public sealed class TestDbContextFactory : IAsyncDisposable
     {

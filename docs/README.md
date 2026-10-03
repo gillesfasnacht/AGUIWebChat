@@ -22,7 +22,12 @@ A Blazor Server (.NET 10) chat application featuring Fluent UI, an Ollama agent 
 - `src/Server/Data/` and `src/Server/Migrations/`: EF Core database context and SQL Server migrations.
 - `src/Server/Mapping/`: mappings between entities and API models.
 - `src/Contracts/`: DTOs shared by the server and client.
-- `tests/AGUIWebChat.Tests/`: automated tests.
+- `tests/AGUIWebChat.Client.Tests/`: model panel validation and the client SSE logger.
+- `tests/AGUIWebChat.Contracts.Tests/`: DTO annotations, boundary values, and validation messages.
+- `tests/AGUIWebChat.Middleware.Tests/`: shared SSE decoding, stream cancellation, read errors, and byte preservation.
+- `tests/AGUIWebChat.Server.Tests/`: inference, telemetry, catalogue services, SQLite persistence, API endpoints, and the server SSE logger adapter.
+- `tests/Directory.Build.props`: shared .NET and xUnit test configuration.
+- `tests/Directory.Build.targets` and `tests/test.runsettings`: shared results directory configuration for MTP and VSTest.
 - `docs/`: project documentation.
 
 All paths and commands below are relative to the repository root, which contains `AGUIWebChat.slnx` and `global.json`.
@@ -91,6 +96,21 @@ dotnet test --solution AGUIWebChat.slnx --configuration Release --no-build
 ```
 
 The tests use xUnit v3 with Microsoft Testing Platform, configured in `global.json`. API tests supply their own Ollama configuration and an in-memory SQLite database. They require neither a running Ollama or SQL Server instance nor `OLLAMA_ENDPOINT` / `OLLAMA_MODEL` environment variables.
+
+Run a single test project independently:
+
+```powershell
+dotnet test --project tests/AGUIWebChat.Client.Tests/AGUIWebChat.Client.Tests.csproj
+dotnet test --project tests/AGUIWebChat.Contracts.Tests/AGUIWebChat.Contracts.Tests.csproj
+dotnet test --project tests/AGUIWebChat.Middleware.Tests/AGUIWebChat.Middleware.Tests.csproj
+dotnet test --project tests/AGUIWebChat.Server.Tests/AGUIWebChat.Server.Tests.csproj
+```
+
+The client tests do not reference the server. Contract and middleware tests reference only their corresponding libraries. SQLite and the ASP.NET Core test host packages are confined to the server test project. Shared SSE stream tests live in `AGUIWebChat.Middleware.Tests` and are not duplicated; application-specific logger adapters are tested in their respective client and server projects.
+
+Test reports and attachments default to `tests/TestResults/`, which is excluded from Git. `tests/Directory.Build.props` defines the results path, and `tests/Directory.Build.targets` generates each test application's MTP configuration with `platformOptions.resultDirectory` during the build. The path is resolved from the repository's current location, so it works without a machine-specific path in source control. An explicit `--results-directory` option can override it.
+
+For Visual Studio's VSTest mode with `xunit.runner.visualstudio`, the same shared props file selects `tests/test.runsettings`. If Visual Studio has a different solution-wide settings file selected, use **Test > Configure Run Settings > Select Solution Wide runsettings File** to select `tests/test.runsettings`. The MTP configuration is generated independently for Visual Studio's Microsoft Testing Platform mode. Rebuild the test projects after changing these settings. Existing results at the repository root are not moved automatically.
 
 Coverage includes inference validation, fragmented SSE decoding, cancellation, read errors, telemetry, catalogue persistence, and API success and error responses. SQLite tests use `EnsureCreated`; they do not validate SQL Server migrations.
 

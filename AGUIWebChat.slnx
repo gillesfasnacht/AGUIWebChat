@@ -9,7 +9,13 @@
 
   <!-- Dossier virtuel pour les tests -->
   <Folder Name="/tests/">
-    <Project Path="tests/AGUIWebChat.Tests/AGUIWebChat.Tests.csproj" />
+    <File Path="tests/Directory.Build.props" />
+    <File Path="tests/Directory.Build.targets" />
+    <File Path="tests/test.runsettings" />
+    <Project Path="tests/AGUIWebChat.Client.Tests/AGUIWebChat.Client.Tests.csproj" />
+    <Project Path="tests/AGUIWebChat.Contracts.Tests/AGUIWebChat.Contracts.Tests.csproj" />
+    <Project Path="tests/AGUIWebChat.Middleware.Tests/AGUIWebChat.Middleware.Tests.csproj" />
+    <Project Path="tests/AGUIWebChat.Server.Tests/AGUIWebChat.Server.Tests.csproj" />
   </Folder>
 
   <!-- Dossier virtuel pour la documentation -->

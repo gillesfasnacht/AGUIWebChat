@@ -1,13 +1,13 @@
-﻿using AGUIWebChat.Contracts.AI;
+using AGUIWebChat.Contracts.AI;
 using AGUIWebChat.Contracts.AI.Models;
 using AGUIWebChat.Server.Mapping;
 using AGUIWebChat.Server.Services.AI;
-using AGUIWebChat.Tests.Infrastructure;
+using AGUIWebChat.Server.Tests.Infrastructure;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-namespace AGUIWebChat.Tests.Services.AI
+namespace AGUIWebChat.Server.Tests.Services.AI
 {
     public sealed class AIModelServiceTests
     {

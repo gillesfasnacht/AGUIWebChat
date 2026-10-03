@@ -2,7 +2,7 @@ using AGUIWebChat.Middleware;
 using Microsoft.Extensions.Logging;
 using Xunit;
 
-namespace AGUIWebChat.Tests;
+namespace AGUIWebChat.Client.Tests.Middleware;
 
 public class SseEventLoggerTests
 {
@@ -16,16 +16,11 @@ public class SseEventLoggerTests
             => Entries.Add((logLevel, formatter(state, exception)));
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public void BothApplicationsReconstructTextAndReasoningWithTheSharedLogger(bool client)
+    [Fact]
+    public void LoggerReconstructsTextAndReasoningWithTheSharedLogger()
     {
-        var clientLog = new CaptureLogger<AGUIWebChat.Client.Middleware.AgUiClientSseEventLogger>();
-        var serverLog = new CaptureLogger<AGUIWebChat.Server.Middleware.AgUiSseEventLogger>();
-        IAgUiSseEventLogger logger = client
-            ? new AGUIWebChat.Client.Middleware.AgUiClientSseEventLogger(clientLog)
-            : new AGUIWebChat.Server.Middleware.AgUiSseEventLogger(serverLog);
+        var capture = new CaptureLogger<AGUIWebChat.Client.Middleware.AgUiClientSseEventLogger>();
+        IAgUiSseEventLogger logger = new AGUIWebChat.Client.Middleware.AgUiClientSseEventLogger(capture);
         foreach (var kind in new[] { "TEXT", "REASONING" })
         {
             logger.LogEvent($$"""data: {"type":"{{kind}}_MESSAGE_START","messageId":"m","role":"assistant"}""");
@@ -34,7 +29,7 @@ public class SseEventLoggerTests
             logger.LogEvent($$"""data: {"type":"{{kind}}_MESSAGE_END","messageId":"m"}""");
         }
         logger.LogEvent("data: {invalid}");
-        var entries = client ? clientLog.Entries : serverLog.Entries;
+        var entries = capture.Entries;
         Assert.Contains(entries, entry => entry.Level == LogLevel.Information && entry.Text.Contains("Content=Bonjour"));
         Assert.Contains(entries, entry => entry.Level == LogLevel.Debug && entry.Text.Contains("Content=Bonjour"));
         Assert.Contains(entries, entry => entry.Level == LogLevel.Warning && entry.Text.Contains("Unable to parse"));

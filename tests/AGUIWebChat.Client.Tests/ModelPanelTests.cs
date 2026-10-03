@@ -9,7 +9,7 @@ using Microsoft.FluentUI.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Xunit;
 
-namespace AGUIWebChat.Tests;
+namespace AGUIWebChat.Client.Tests;
 
 public sealed class ModelPanelTests
 {
