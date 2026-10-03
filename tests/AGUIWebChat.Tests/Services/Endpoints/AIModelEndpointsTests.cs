@@ -243,6 +243,35 @@ namespace AGUIWebChat.Tests.Services.Endpoints
                 Assert.True(problem.TryGetProperty("errors", out _));
         }
 
+        [Theory]
+        [InlineData("ModelId", "ModelId is required.")]
+        [InlineData("Temperature", "Temperature must be between 0 and 2.")]
+        [InlineData("EffortValue", "Every reasoning effort must have a value.")]
+        [InlineData("Multiple", "Temperature must be between 0 and 2. TopP must be between 0 and 1.")]
+        public async Task ValidationErrors_ShouldPreserveCustomMessagesInErrorsModel(string scenario, string expectedMessage)
+        {
+            var token = TestContext.Current.CancellationToken;
+            await using var factory = new AGUIWebChatWebApplicationFactory();
+            using var client = factory.CreateClient();
+            var model = CreateGraniteModel();
+
+            switch (scenario)
+            {
+                case "ModelId": model.ModelId = ""; break;
+                case "Temperature": model.Temperature = 2.1; break;
+                case "EffortValue": model.ReasoningEfforts[0].Value = ""; break;
+                case "Multiple": model.Temperature = 2.1; model.TopP = 1.1; break;
+            }
+
+            using var response = await client.PostAsJsonAsync("/api/models", model, token);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var problem = await response.Content.ReadFromJsonAsync<JsonElement>(token);
+            var messages = problem.GetProperty("errors").GetProperty("model");
+            Assert.Equal(1, messages.GetArrayLength());
+            Assert.Equal(expectedMessage, messages[0].GetString());
+        }
+
         [Fact]
         public async Task TestHost_ShouldUseItsOwnOllamaConfiguration()
         {

@@ -4,18 +4,14 @@
 @using Microsoft.FluentUI.AspNetCore.Components
 
 <FluentDialogBody> 
-
-    <FluentStack Orientation="Orientation.Vertical" 
-                 VerticalGap="12">
-
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
         <FluentDivider />
 
+        @* Model *@
         <h4 class="brand-text">Model</h4>    
             
-        <FluentStack Orientation="Orientation.Horizontal"
-                     HorizontalGap="12"
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12"
                      VerticalAlignment="VerticalAlignment.Center">
-
             @if (IsNew)
             {
                 <FluentSelect TOption="AIProviderListItem"
@@ -33,102 +29,81 @@
                                  Value="@Model.ProviderName"
                                  ReadOnly="true" />
             }
-
             <FluentTextInput Label="Model ID"
                              @bind-Value="Model.ModelId"
                              @bind-Value:after="UpdateSaveButton" />
-
             <FluentTextInput Label="Display name"
                              @bind-Value="Model.DisplayName"
                              @bind-Value:after="UpdateSaveButton" />
-
         </FluentStack>
 
+        @* Capabilities *@
         <h4 class="brand-text">Capabilities</h4>
 
-        <FluentStack Orientation="Orientation.Horizontal"
-                     HorizontalGap="12"
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12"
                      VerticalAlignment="VerticalAlignment.Center">
-
             <FluentCheckbox Shape="@CheckboxShape.Circular"
                             Label="Tools"
                             @bind-Value="Model.SupportsTools">
             </FluentCheckbox>
-
             <FluentCheckbox Shape="@CheckboxShape.Circular"
                             Label="Streaming"
                             @bind-Value="Model.SupportsStreaming">
             </FluentCheckbox>
-
             <FluentCheckbox Shape="@CheckboxShape.Circular"
                             Label="Vision"
                             @bind-Value="Model.SupportsVision">
             </FluentCheckbox>
-
         </FluentStack>
 
+        @* Reasoning *@
         <h4 class="brand-text">Reasoning</h4>
 
         <FluentSelect Label="Thinking mode"
                       Items="@_thinkingModes"
                       @bind-Value="Model.ThinkingMode"
                       @bind-Value:after="UpdateSaveButton" />
-
         @if (Model.ThinkingMode == ThinkingMode.Effort)
         {
-            <FluentStack Orientation="Orientation.Vertical" 
-                         VerticalGap="12">
-
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
                 <FluentLabel Typo="Typography.Body">
                     Reasoning efforts
                 </FluentLabel>
-
                 @if (!IsReasoningValid())
                 {
                     <FluentMessageBar Intent="MessageBarIntent.Warning">
                         Add at least one effort level, fill in its name and value, and select exactly one default level.
                     </FluentMessageBar>
                 }
-
                 @foreach (var effort in Model.ReasoningEfforts.OrderBy(x => x.SortOrder).ToList())
                 {
                     <div @key="effort">
 
-                        <FluentStack Orientation="Orientation.Horizontal"
-                                     HorizontalGap="12"
+                        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12"
                                      VerticalAlignment="VerticalAlignment.Center">
-
                             <FluentTextInput Label="Name"
                                              @bind-Value="effort.DisplayName"
                                              @bind-Value:after="UpdateSaveButton" />
-
                             <FluentTextInput Label="Value"
                                              @bind-Value="effort.Value"
                                              @bind-Value:after="UpdateSaveButton" />
-
                             <FluentNumberInput Label="Order"
                                                @bind-Value="effort.SortOrder" />
-
                             <FluentCheckbox Value="@effort.IsDefault"
                                             ValueChanged="@((bool value) => SetDefaultEffort(effort, value))">
                                 Default
                             </FluentCheckbox>
-
                             <FluentButton Appearance="ButtonAppearance.Primary"
                                           IconStart="@(new Icons.Regular.Size20.Delete())"
                                           OnClick="@(() => RemoveEffort(effort))" />
-
                         </FluentStack>
-
                     </div>
                 }
-
                 <FluentButton Appearance="ButtonAppearance.Primary"
                               IconStart="@(new Icons.Regular.Size20.Add())"
                               OnClick="AddEffort">
                     Add a level
                 </FluentButton>
-
             </FluentStack>
         }
         else if (Model.ThinkingMode == ThinkingMode.OnOff)
@@ -138,52 +113,39 @@
             </FluentMessageBar>
         }
 
+        @* Token configuration *@
         <h4 class="brand-text">Token configuration</h4>
 
-        <FluentStack Orientation="Orientation.Horizontal"
-                     HorizontalGap="12"
-                     VerticalAlignment="VerticalAlignment.Center">
-                                     
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12"
+                     VerticalAlignment="VerticalAlignment.Center">                   
             <FluentNumberInput Label="Context window"
                                @bind-Value="Model.ContextWindow" />
 
             <FluentNumberInput Label="Max output tokens"
                                @bind-Value="Model.MaxOutputTokens" />
-
         </FluentStack>
-
+        
+        @* Default parameters *@
         <h4 class="brand-text">Default parameters</h4>
 
-        <FluentStack Orientation="Orientation.Horizontal"
-                        HorizontalGap="10">
-
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
             <FluentNumberInput Label="Temperature"
                                Step="0.1"
                                @bind-Value="Model.Temperature" />
-
             <FluentNumberInput Label="Num Ctx"
                                @bind-Value="Model.NumCtx" />
-
         </FluentStack>
-        
-        <FluentStack Orientation="Orientation.Horizontal"
-                     HorizontalGap="10">
-
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
             <FluentNumberInput Label="Top P"
                                Step="0.1"
                                @bind-Value="Model.TopP" />
-
             <FluentNumberInput Label="Top K"
                                @bind-Value="Model.TopK" />
-
         </FluentStack>
-
         <FluentCheckbox @bind-Value="Model.IsEnabled">
             Enabled
         </FluentCheckbox>
-
     </FluentStack>
-
 </FluentDialogBody>
 
 @code
@@ -222,8 +184,7 @@
 
     private void UpdateSaveButton()
     {
-        if (DialogInstance is null)
-            return;
+        if (DialogInstance is null) return;
 
         DialogInstance.Options.Footer.PrimaryAction.Disabled = !IsValid();
     }
@@ -280,43 +241,21 @@
 
     private bool IsValid()
     {
-        if (IsNew && Model.ProviderId <= 0)
-            return false;
-
-        if (string.IsNullOrWhiteSpace(Model.ModelId))
-            return false;
-
-        if (string.IsNullOrWhiteSpace(Model.DisplayName))
-            return false;
-
-        if (Model.ThinkingMode != ThinkingMode.Effort)
-            return true;
-
-        if (Model.ReasoningEfforts.Count == 0)
-            return false;
-
-        if (Model.ReasoningEfforts.Any(x => string.IsNullOrWhiteSpace(x.DisplayName)))
-        {
-            return false;
-        }
-
-        if (Model.ReasoningEfforts.Any(x => string.IsNullOrWhiteSpace(x.Value)))
-        {
-            return false;
-        }
-
-        if (Model.ReasoningEfforts.Count(x => x.IsDefault) != 1)
-        {
-            return false;
-        }
-
+        if (IsNew && Model.ProviderId <= 0) return false;
+        if (string.IsNullOrWhiteSpace(Model.ModelId)) return false;
+        if (string.IsNullOrWhiteSpace(Model.DisplayName)) return false;
+        if (Model.ThinkingMode != ThinkingMode.Effort) return true;
+        if (Model.ReasoningEfforts.Count == 0) return false;
+        if (Model.ReasoningEfforts.Any(x => string.IsNullOrWhiteSpace(x.DisplayName))) return false;
+        if (Model.ReasoningEfforts.Any(x => string.IsNullOrWhiteSpace(x.Value))) return false;
+        if (Model.ReasoningEfforts.Count(x => x.IsDefault) != 1) return false;
+        
         return true;
     }
 
     private bool IsReasoningValid()
     {
-        if (Model.ThinkingMode != ThinkingMode.Effort)
-            return true;
+        if (Model.ThinkingMode != ThinkingMode.Effort) return true;
 
         return
             Model.ReasoningEfforts.Count > 0 &&

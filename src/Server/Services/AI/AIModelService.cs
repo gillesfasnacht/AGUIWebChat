@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using AGUIWebChat.Contracts.AI;
 using AGUIWebChat.Contracts.AI.Models;
 using AGUIWebChat.Server.Data;
@@ -215,52 +216,18 @@ namespace AGUIWebChat.Server.Services.AI
 
         private static void Validate(AIModelEditModel model)
         {
-            if (model.ProviderId <= 0)
-            {
-                throw new ModelValidationException("A provider must be selected.");
-            }
-
-            if (string.IsNullOrWhiteSpace(model.ModelId))
-            {
-                throw new ModelValidationException("ModelId is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(model.DisplayName))
-            {
-                throw new ModelValidationException("DisplayName is required.");
-            }
-
-            if (model.ContextWindow is <= 0)
-            {
-                throw new ModelValidationException("ContextWindow must be greater than zero.");
-            }
-
-            if (model.MaxOutputTokens is <= 0)
-            {
-                throw new ModelValidationException("MaxOutputTokens must be greater than zero.");
-            }
-
-            if (model.Temperature is < 0)
-            {
-                throw new ModelValidationException("Temperature cannot be negative.");
-            }
-
-            if (model.TopP is < 0 or > 1)
-            {
-                throw new ModelValidationException("TopP must be between 0 and 1.");
-            }
-
-            if (model.TopK is <= 0)
-            {
-                throw new ModelValidationException("TopK must be greater than zero.");
-            }
-
-            if (model.NumCtx is <= 0)
-            {
-                throw new ModelValidationException("NumCtx must be greater than zero.");
-            }
+            ValidateAnnotations(model);
 
             ValidateReasoning(model);
+        }
+
+        private static void ValidateAnnotations(object model)
+        {
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(model, new ValidationContext(model), results, validateAllProperties: true))
+            {
+                throw new ModelValidationException(string.Join(" ", results.Select(x => x.ErrorMessage)));
+            }
         }
 
         private static void ValidateReasoning(AIModelEditModel model)
@@ -268,6 +235,16 @@ namespace AGUIWebChat.Server.Services.AI
             if (model.ThinkingMode != ThinkingMode.Effort)
             {
                 return;
+            }
+
+            foreach (var effort in model.ReasoningEfforts)
+            {
+                if (effort is null)
+                {
+                    throw new ModelValidationException("Reasoning efforts cannot contain null entries.");
+                }
+
+                ValidateAnnotations(effort);
             }
 
             if (model.ReasoningEfforts.Count == 0)
@@ -278,16 +255,6 @@ namespace AGUIWebChat.Server.Services.AI
             if (model.ReasoningEfforts.Count(x => x.IsDefault) != 1)
             {
                 throw new ModelValidationException("Exactly one reasoning effort must be the default.");
-            }
-
-            if (model.ReasoningEfforts.Any(x => string.IsNullOrWhiteSpace(x.DisplayName)))
-            {
-                throw new ModelValidationException("Every reasoning effort must have a display name.");
-            }
-
-            if (model.ReasoningEfforts.Any(x => string.IsNullOrWhiteSpace(x.Value)))
-            {
-                throw new ModelValidationException("Every reasoning effort must have a value.");
             }
 
             var duplicateValue = model.ReasoningEfforts

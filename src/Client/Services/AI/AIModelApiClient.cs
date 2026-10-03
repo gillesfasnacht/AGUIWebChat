@@ -21,11 +21,10 @@ namespace AGUIWebChat.Client.Services.AI
 
         public async Task<IReadOnlyList<AIModelEditModel>> GetModelsAsync(bool enabledOnly = false, CancellationToken cancellationToken = default)
         {
-            var models =
-                await _httpClient.GetFromJsonAsync<List<AIModelEditModel>>(
-                    $"/api/models?enabledOnly={enabledOnly.ToString().ToLowerInvariant()}",
-                    JsonOptions,
-                    cancellationToken);
+            var models = await _httpClient.GetFromJsonAsync<List<AIModelEditModel>>(
+                $"/api/models?enabledOnly={enabledOnly.ToString().ToLowerInvariant()}",
+                JsonOptions,
+                cancellationToken);
 
             return models ?? [];
         }

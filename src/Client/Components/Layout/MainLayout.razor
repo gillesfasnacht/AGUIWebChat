@@ -8,11 +8,8 @@
 
     @* Header *@
     <FluentLayoutItem Area="LayoutArea.Header">
-
         <FluentLayoutHamburger />
-
         AG-UI FluentUI Chat Client
-
         <FluentSpacer />
 
         @* Theme selection button *@
@@ -21,33 +18,24 @@
                       IconStart="@(new Icons.Regular.Size20.Color().WithColor(SystemColors.Neutral.ForegroundOnBrand))"
                       Class="fluent-header-hover"
                       Title="Choose a color theme" />
-
         <FluentMenu Trigger="theme-menu">
-
             <FluentMenuList>
-
                 <FluentMenuItem OnClick="@(async e => await ApplyCustomThemeAsync("#0F6CBD"))">
                     Default
                 </FluentMenuItem>
-
                 <FluentMenuItem OnClick="@(async e => await ApplyCustomThemeAsync("#BD0F0F"))">
                     Red
                 </FluentMenuItem>
-
                 <FluentMenuItem OnClick="@(async e => await ApplyCustomThemeAsync("#5DBD0F"))">
                     Green
                 </FluentMenuItem>
-
                 <FluentMenuItem OnClick="@(async e => await ApplyCustomThemeAsync("#E77E22"))">
                     Orange
                 </FluentMenuItem>
-
                 <FluentMenuItem OnClick="@(async e => await ApplyCustomThemeAsync("#8E45AE"))">
                     Purple
                 </FluentMenuItem>
-
             </FluentMenuList>
-
         </FluentMenu>
 
         @* Dark/Light icon *@
@@ -56,31 +44,22 @@
                       Class="fluent-header-hover"
                       Title="Switch to Light/Dark theme"
                       OnClick="@(async e => await ThemeService.SwitchThemeAsync())">
-
             <FluentIcon Class="hidden-if-light"
                         Value="@(new Icons.Filled.Size20.DarkTheme().WithColor(SystemColors.Neutral.ForegroundOnBrand))" />
-
             <FluentIcon Class="hidden-if-dark"
                         Style="transform: rotate(180deg);"
                         Value="@(new Icons.Filled.Size20.DarkTheme().WithColor(SystemColors.Neutral.ForegroundOnBrand))" />
-
         </FluentButton>
-
     </FluentLayoutItem>
 
     @* Navigation *@
     <FluentLayoutItem Area="LayoutArea.Navigation">
-
         <NavMenu />
-
     </FluentLayoutItem>
 
     @* Content *@
-    <FluentLayoutItem Area="LayoutArea.Content"
-                      Class="main">
-
+    <FluentLayoutItem Area="LayoutArea.Content" Class="main">
         <div class="content">
-
             @if (SettingsService.IsInitialized)
             {
                 @Body
@@ -91,49 +70,38 @@
                     Loading settings...
                 </div>
             }
-
         </div>
-
     </FluentLayoutItem>
 
     @* Footer *@
     <FluentLayoutItem Area="LayoutArea.Footer">
-
         <div style="display: flex">
-
             <FluentLink Href="https://www.fluentui-blazor.net"
                         Target="LinkTarget.Blank"
                         IconEnd="@(new Icons.Regular.Size16.ArrowExit())">
                 Documentation and demos
             </FluentLink>
-
             <FluentSpacer />
-
             <FluentLink Href="https://learn.microsoft.com/en-us/aspnet/core/blazor"
                         Target="LinkTarget.Blank"
                         IconEnd="@(new Icons.Regular.Size16.ArrowExit())">
                 About Blazor
             </FluentLink>
-
         </div>
-
     </FluentLayoutItem>
 
 </FluentLayout>
 
-<div id="blazor-error-ui"
-     data-nosnippet>
+<div id="blazor-error-ui" data-nosnippet>
 
     An unhandled error has occurred.
 
     <a href="." class="reload">
         Reload
     </a>
-
     <span class="dismiss">
         🗙
     </span>
-
 </div>
 
 @* Add all FluentUI Blazor Providers *@
@@ -157,8 +125,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (!firstRender)
-            return;
+        if (!firstRender) return;
 
         await SettingsService.InitializeAsync();
 

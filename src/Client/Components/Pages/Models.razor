@@ -10,12 +10,9 @@
 @inject AIProviderApiClient ProviderApiClient
 @inject IDialogService DialogService
 
-<PageTitle>AI Models</PageTitle>
-
+<PageTitle>Models</PageTitle>
 <h1>Models</h1>
-
 <p>Manage the AI models available to agents.</p>
-
 <FluentDivider />
 
 @if (_loading)
@@ -33,47 +30,39 @@ else
 {
     <FluentStack Padding="@Padding.Vertical2"
                  HorizontalAlignment="HorizontalAlignment.Left">
-
         <FluentButton Appearance="ButtonAppearance.Primary"
                       IconStart="@(new Icons.Regular.Size20.Add())"
                       OnClick="AddModelAsync">
             Add
         </FluentButton>
-
         <FluentButton IconStart="@(new Icons.Regular.Size20.Edit())"
                       OnClick="@(() => EditModelAsync(SelectedItems.First()))"
                       Margin="@Margin.Horizontal2"
                       Disabled="@(SelectedItems.Count() != 1)">
             Edit
         </FluentButton>   
-        
         <FluentButton IconStart="@(new Icons.Regular.Size20.Delete())"
                       OnClick="@(() => DeleteModelAsync(SelectedItems.First()))"
                       Margin="@Margin.Horizontal2"
                       Disabled="@(SelectedItems.Count() == 0)">
             Delete
         </FluentButton>
-
     </FluentStack>
-
     <FluentDataGrid TGridItem="AIModelEditModel"
                     Items="@_models.AsQueryable()"
                     ShowHover="true"
                     ReorderableColumns="true"
                     HeaderCellAsButtonWithMenu="true"
                     ResizableColumns="true">
-        
         <SelectColumn TGridItem="AIModelEditModel"
                             SelectMode="@DataGridSelectMode.Single"
                             SelectFromEntireRow="true"
                             @bind-SelectedItems="@SelectedItems" />
-
         <PropertyColumn Property="@(x => x.ProviderName)" Title="Provider" />
         <PropertyColumn Property="@(x => x.DisplayName)" Title="Model" />
         <PropertyColumn Property="@(x => x.ModelId)" Title="Model ID" />
         <PropertyColumn Property="@(x => x.ThinkingMode)" Title="Thinking" />
         <PropertyColumn Property="@(x => x.ContextWindow)" Title="Context" />
-
         <TemplateColumn Title="Enabled">
             <ChildContent>
                 @if (context.IsEnabled)
@@ -86,18 +75,14 @@ else
                 }
             </ChildContent>
         </TemplateColumn>
-
     </FluentDataGrid>
 }
 
 @code
 {
     private IReadOnlyList<AIModelEditModel> _models = [];
-
     private IEnumerable<AIModelEditModel> SelectedItems = [];
-
     private bool _loading = true;
-
     private string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -145,22 +130,20 @@ else
                 ThinkingMode = ThinkingMode.None
             };
 
-            var result = await DialogService.ShowDrawerAsync<AIModelEditor>(options =>
+            var result = await DialogService.ShowDrawerAsync<ModelPanel>(options =>
             {
                 options.Modal = true;
                 options.Alignment = DialogAlignment.End;
-                options.Parameters.Add(nameof(AIModelEditor.Model), newModel);
-                options.Parameters.Add(nameof(AIModelEditor.IsNew), true);
-                options.Parameters.Add(nameof(AIModelEditor.Providers), providers);
+                options.Parameters.Add(nameof(ModelPanel.Model), newModel);
+                options.Parameters.Add(nameof(ModelPanel.IsNew), true);
+                options.Parameters.Add(nameof(ModelPanel.Providers), providers);
                 options.Footer.PrimaryAction.Label = "Add";
                 options.Footer.SecondaryAction.Label = "Cancel";
             });
 
-            if (result.Cancelled)
-                return;
+            if (result.Cancelled) return;
 
             await ModelApiClient.CreateAsync(newModel);
-
             await LoadModelsAsync();
         }
         catch (Exception ex)
@@ -184,24 +167,18 @@ else
                 return;
             }
 
-            var result = await DialogService.ShowDrawerAsync<AIModelEditor>(options =>
+            var result = await DialogService.ShowDrawerAsync<ModelPanel>(options =>
             {
                 options.Modal = true;
-
                 options.Alignment = DialogAlignment.End;
-
-                options.Parameters.Add(nameof(AIModelEditor.Model), currentModel);
-
+                options.Parameters.Add(nameof(ModelPanel.Model), currentModel);
                 options.Footer.PrimaryAction.Label = "Save";
-
                 options.Footer.SecondaryAction.Label = "Cancel";
             });
 
-            if (result.Cancelled)
-                return;
+            if (result.Cancelled) return;
 
             await ModelApiClient.UpdateAsync(currentModel);
-
             await LoadModelsAsync();
         }
         catch (Exception ex)
@@ -220,13 +197,11 @@ else
             "Deletion Confirmation",
             "Cancel");
 
-        if (result.Cancelled)
-            return;
+        if (result.Cancelled) return;
 
         try
         {
             await ModelApiClient.DeleteAsync(model.Id);
-
             await LoadModelsAsync();
         }
         catch (Exception ex)
@@ -234,20 +209,4 @@ else
             _errorMessage = $"Unable to delete AI model: {ex.Message}";
         }
     }
-
-    private async Task OpenEditAsync(AIModelEditModel item)
-    {
-        var result = await DialogService.ShowDialogAsync<AIModelEditor>(options =>
-        {
-            //options.Parameters.Add(nameof(AIModelEditor.Model), item.Clone());
-            options.Header.CloseAction.Visible = true;
-            options.Alignment = DialogAlignment.End;
-        });
-
-        if (!result.Cancelled && result.Value is AIModelEditModel updated)
-        {
-            //ModelApiClient.Update(updated);
-        }
-    }
-
 }

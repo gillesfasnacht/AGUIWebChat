@@ -21,25 +21,19 @@
        ============================================================ *@
 
     <header class="chat-header">
-
         <div class="chat-title">
-
             <h4 class="brand-text">.NET Assistant</h4>
-
             <div class="chat-model-info">
                 <span>
                     Thinking: @Settings.ThinkingEffort
                 </span>
             </div>
-
         </div>
-
         <FluentButton Appearance="ButtonAppearance.Primary"
                       IconStart="@(new Icons.Regular.Size20.Settings())"
                       OnClick="OpenSettingsAsync">
             Settings
         </FluentButton>
-
     </header>
 
     @* ============================================================
@@ -47,7 +41,6 @@
        ============================================================ *@
 
     <main class="chat-content">
-
         @foreach (var message in Messages)
         {
             <ChatMessage Message="@message"
@@ -55,7 +48,6 @@
                          MonitoringDisplay="@Settings.MonitoringDisplay"
                          MonitoringSettings="@Settings.Monitoring" />
         }
-
     </main>
 
     @* ============================================================
@@ -63,16 +55,13 @@
        ============================================================ *@
 
     <footer class="chat-input-area">
-
         <div class="chat-input-container">
-
             <FluentTextArea @bind-Value="InputText"
                             Placeholder="Ask something..."
                             Rows="4"
                             Disabled="@IsSending"
                             Style="width: 100%;"
                             Class="chat-input" />
-
             <FluentButton Size="ButtonSize.Large"
                           Appearance="ButtonAppearance.Primary"
                           IconStart="@(new Icons.Regular.Size20.Send())"
@@ -81,7 +70,6 @@
                           Class="send-button">
                           @(IsSending ? "Sending..." : "Send")
             </FluentButton>
-
             <FluentButton Id="thinking-effort-menu"
                           Size="ButtonSize.Large"
                           Appearance="ButtonAppearance.Outline"
@@ -90,7 +78,6 @@
                           Style="flex: 0 0 auto; white-space: nowrap;">
                           @Settings.ThinkingEffort ▾
             </FluentButton>
-
             <FluentMenu Trigger="thinking-effort-menu">
                 <FluentMenuList>
                     @foreach (var effort in Enum.GetValues<ThinkingEffort>())
@@ -108,17 +95,13 @@
             }
 
         </div>
-
     </footer>
-
 </div>
 
 @code
 {
     private ChatMessageModel? _currentAssistantMessage;
-
     private string? InputText;
-
     private bool IsSending;
     private CancellationTokenSource? _sendCancellation;
     private bool _disposed;
@@ -134,8 +117,7 @@
 
     private async Task SetThinkingEffortAsync(ThinkingEffort effort)
     {
-        if (IsSending)
-            return;
+        if (IsSending) return;
 
         Settings.ThinkingEffort = effort;
         await SettingsService.SaveAsync();
@@ -204,8 +186,6 @@
             Role = ChatRoleModel.Assistant,
             Content = string.Empty,
             IsStreaming = true,
-
-            
         };
 
         _currentAssistantMessage = assistantMessage;
@@ -226,7 +206,6 @@
             await foreach (var update in AgUiChatService.SendAsync(userText, Settings, _sendCancellation.Token))
             {
                 var hasChanged = false;
-
                 var chatUpdate = update.AsChatResponseUpdate();
 
                 // ---------------------------------------------------------
@@ -269,12 +248,11 @@
         finally
         {
             assistantMessage.IsStreaming = false;
-
             IsSending = false;
             _sendCancellation.Dispose();
             _sendCancellation = null;
-            if (!_disposed)
-                await InvokeAsync(StateHasChanged);
+
+            if (!_disposed) await InvokeAsync(StateHasChanged);
         }
     }
 
@@ -289,8 +267,7 @@
 
     private async void OnReasoningCompleted(ReasoningTelemetryDto telemetry)
     {
-        var message = Messages.FirstOrDefault(
-            m => m.RunId == telemetry.RunId);
+        var message = Messages.FirstOrDefault(m => m.RunId == telemetry.RunId);
 
         if (message is null)
             return;
@@ -304,14 +281,11 @@
 
     private async void OnLlmMetricsCompleted(LlmTelemetryDto telemetry)
     {
-        var message = Messages.FirstOrDefault(
-            m => m.RunId == telemetry.RunId);
+        var message = Messages.FirstOrDefault(m => m.RunId == telemetry.RunId);
 
-        if (message is null)
-            return;
+        if (message is null) return;
 
         message.MonitoringTelemetry = telemetry;
-
         await InvokeAsync(StateHasChanged);
     }
 

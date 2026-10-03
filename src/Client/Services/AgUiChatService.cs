@@ -1,13 +1,10 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text.Json;
-
-using AGUI.Abstractions;
+﻿using AGUI.Abstractions;
 using AGUI.Client;
-
 using AGUIWebChat.Client.Models;
-
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace AGUIWebChat.Client.Services;
 
@@ -21,14 +18,11 @@ public sealed class AgUiChatService
     public AgUiChatService(HttpClient httpClient, TelemetryService telemetry)
     {
         _telemetry = telemetry;
+
         var chatClient = new AGUIChatClient(new AGUIChatClientOptions(httpClient, "/ag-ui"));
 
         _remoteAgent = chatClient.AsAIAgent();
-
-        _session = _remoteAgent
-            .CreateSessionAsync()
-            .GetAwaiter()
-            .GetResult();
+        _session = _remoteAgent.CreateSessionAsync().GetAwaiter().GetResult();
     }
 
     public async IAsyncEnumerable<AgentResponseUpdate> SendAsync(
@@ -60,11 +54,7 @@ public sealed class AgUiChatService
             }
         };
 
-        await foreach (var update in _remoteAgent.RunStreamingAsync(
-            message,
-            _session,
-            runOptions,
-            cancellationToken))
+        await foreach (var update in _remoteAgent.RunStreamingAsync(message, _session, runOptions, cancellationToken))
         {
             var chatUpdate = update.AsChatResponseUpdate();
 

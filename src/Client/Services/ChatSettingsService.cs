@@ -29,22 +29,15 @@ namespace AGUIWebChat.Client.Services
 
         public async Task InitializeAsync()
         {
-            if (IsInitialized)
-                return;
+            if (IsInitialized) return;
 
             try
             {
-                var json = await _jsRuntime.InvokeAsync<string?>(
-                    "localStorage.getItem",
-                    StorageKey);
+                var json = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", StorageKey);
 
                 if (!string.IsNullOrWhiteSpace(json))
                 {
-                    Settings =
-                        JsonSerializer.Deserialize<ChatSettings>(
-                            json,
-                            JsonOptions)
-                        ?? new ChatSettings();
+                    Settings = JsonSerializer.Deserialize<ChatSettings>(json, JsonOptions) ?? new ChatSettings();
                 }
             }
             catch (JSException)
@@ -53,29 +46,14 @@ namespace AGUIWebChat.Client.Services
             }
 
             IsInitialized = true;
-
-            //await ApplyThemeAsync();
-
             SettingsChanged?.Invoke();
         }
 
-        //public async Task ApplyThemeAsync()
-        //{
-        //    await _jsRuntime.InvokeVoidAsync(
-        //        "chatTheme.apply",
-        //        Settings.Theme.ToString());
-        //}
-
         public async Task SaveAsync()
         {
-            var json = JsonSerializer.Serialize(
-                Settings,
-                JsonOptions);
+            var json = JsonSerializer.Serialize(Settings, JsonOptions);
 
-            await _jsRuntime.InvokeVoidAsync(
-                "localStorage.setItem",
-                StorageKey,
-                json);
+            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", StorageKey, json);
 
             SettingsChanged?.Invoke();
         }
@@ -84,11 +62,7 @@ namespace AGUIWebChat.Client.Services
         {
             Settings = new ChatSettings();
 
-            await _jsRuntime.InvokeVoidAsync(
-                "localStorage.removeItem",
-                StorageKey);
-
-            //await ApplyThemeAsync();
+            await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", StorageKey);
 
             SettingsChanged?.Invoke();
         }

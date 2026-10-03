@@ -11,13 +11,9 @@ public sealed class AIProviderApiClient
         _httpClient = httpClient;
     }
 
-    public async Task<IReadOnlyList<AIProviderListItem>>
-        GetProvidersAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<AIProviderListItem>> GetProvidersAsync(CancellationToken cancellationToken = default)
     {
-        var providers = await _httpClient
-            .GetFromJsonAsync<List<AIProviderListItem>>(
-                "/api/providers",
-                cancellationToken);
+        var providers = await _httpClient.GetFromJsonAsync<List<AIProviderListItem>>("/api/providers", cancellationToken);
 
         return providers ?? [];
     }

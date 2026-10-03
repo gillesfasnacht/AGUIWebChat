@@ -19,31 +19,26 @@ namespace AGUIWebChat.Client.Middleware
             }
         }
 
-        protected override async Task<Stream>
-            CreateContentReadStreamAsync()
+        protected override async Task<Stream> CreateContentReadStreamAsync()
         {
             Stream stream = await _inner.ReadAsStreamAsync();
 
             return new SseReadLoggingStream(stream, _eventLogger);
         }
 
-        protected override async Task SerializeToStreamAsync(
-            Stream stream,
-            TransportContext? context)
+        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
         {
             await _inner.CopyToAsync(stream);
         }
 
-        protected override bool TryComputeLength(
-            out long length)
+        protected override bool TryComputeLength(out long length)
         {
             length = 0;
 
             return false;
         }
 
-        protected override void Dispose(
-            bool disposing)
+        protected override void Dispose(bool disposing)
         {
             if (disposing)
             {

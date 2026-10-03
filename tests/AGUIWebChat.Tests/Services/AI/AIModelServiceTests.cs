@@ -239,6 +239,78 @@ namespace AGUIWebChat.Tests.Services.AI
             Assert.False(effortsExist);
         }
 
+        [Theory]
+        [InlineData("ProviderId")]
+        [InlineData("ModelId")]
+        [InlineData("DisplayName")]
+        [InlineData("ThinkingMode")]
+        [InlineData("ContextWindow")]
+        [InlineData("MaxOutputTokens")]
+        [InlineData("Temperature")]
+        [InlineData("TopP")]
+        [InlineData("TopK")]
+        [InlineData("NumCtx")]
+        [InlineData("ReasoningEfforts")]
+        [InlineData("EffortDisplayName")]
+        [InlineData("EffortValue")]
+        [InlineData("NullEffort")]
+        public async Task CreateAndUpdateAsync_WhenAnnotationsAreInvalid_ShouldRejectWithoutChangingDatabase(string property)
+        {
+            var cancellationToken = TestContext.Current.CancellationToken;
+            await using var database = await TestDbContextFactory.CreateAsync(cancellationToken);
+            var service = new AIModelService(database.DbContext);
+            var model = await service.CreateAsync(CreateGraniteModel(), cancellationToken);
+
+            switch (property)
+            {
+                case "ProviderId": model.ProviderId = 0; break;
+                case "ModelId": model.ModelId = new string('x', 201); break;
+                case "DisplayName": model.DisplayName = new string('x', 201); break;
+                case "ThinkingMode": model.ThinkingMode = (ThinkingMode)999; break;
+                case "ContextWindow": model.ContextWindow = 0; break;
+                case "MaxOutputTokens": model.MaxOutputTokens = 0; break;
+                case "Temperature": model.Temperature = 2.1; break;
+                case "TopP": model.TopP = 1.1; break;
+                case "TopK": model.TopK = 0; break;
+                case "NumCtx": model.NumCtx = 0; break;
+                case "ReasoningEfforts": model.ReasoningEfforts = null!; break;
+                case "EffortDisplayName": model.ReasoningEfforts[0].DisplayName = new string('x', 101); break;
+                case "EffortValue": model.ReasoningEfforts[0].Value = new string('x', 101); break;
+                case "NullEffort": model.ReasoningEfforts.Add(null!); break;
+            }
+
+            await Assert.ThrowsAsync<ModelValidationException>(() => service.CreateAsync(model, cancellationToken));
+            await Assert.ThrowsAsync<ModelValidationException>(() => service.UpdateAsync(model, cancellationToken));
+
+            database.DbContext.ChangeTracker.Clear();
+            var saved = await service.GetModelAsync(model.Id, cancellationToken);
+            Assert.NotNull(saved);
+            Assert.Equal("Granite 4.2 8B", saved.DisplayName);
+            Assert.Equal(0.7, saved.Temperature);
+            Assert.Equal(1, await database.DbContext.AIModels.CountAsync(cancellationToken));
+        }
+
+        [Fact]
+        public async Task CreateAsync_WithOptionalValuesNullAndNoReasoningEfforts_ShouldSucceed()
+        {
+            var cancellationToken = TestContext.Current.CancellationToken;
+            await using var database = await TestDbContextFactory.CreateAsync(cancellationToken);
+            var service = new AIModelService(database.DbContext);
+            var model = new AIModelEditModel
+            {
+                ProviderId = 1,
+                ModelId = "minimal",
+                DisplayName = "Minimal"
+            };
+
+            var created = await service.CreateAsync(model, cancellationToken);
+
+            Assert.NotEqual(0, created.Id);
+            Assert.Null(created.Temperature);
+            Assert.Null(created.TopP);
+            Assert.Empty(created.ReasoningEfforts);
+        }
+
         private static AIModelEditModel CreateGraniteModel()
         {
             return new AIModelEditModel
