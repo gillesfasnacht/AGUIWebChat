@@ -10,8 +10,7 @@
         @* Model *@
         <h4 class="brand-text">Model</h4>    
             
-        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12"
-                     VerticalAlignment="VerticalAlignment.Center">
+        <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
             @if (IsNew)
             {
                 <FluentSelect TOption="AIProviderListItem"
@@ -117,11 +116,14 @@
         <h4 class="brand-text">Token configuration</h4>
 
         <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12"
-                     VerticalAlignment="VerticalAlignment.Center">                   
+                     VerticalAlignment="VerticalAlignment.Center">   
             <FluentNumberInput Label="Context window"
+                               Step="1024"
+                               Style="flex:1;"
                                @bind-Value="Model.ContextWindow" />
 
             <FluentNumberInput Label="Max output tokens"
+                               Style="flex:1;"
                                @bind-Value="Model.MaxOutputTokens" />
         </FluentStack>
         
@@ -129,18 +131,43 @@
         <h4 class="brand-text">Default parameters</h4>
 
         <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
-            <FluentNumberInput Label="Temperature"
+            <FluentStack Orientation="Orientation.Vertical">
+                <FluentNumberInput Label="Temperature"
                                Step="0.1"
+                               Style="flex:1;"
                                @bind-Value="Model.Temperature" />
-            <FluentNumberInput Label="Num Ctx"
-                               @bind-Value="Model.NumCtx" />
+                    <div class="brand-text">
+                        Controls the randomness of generated responses.
+                    </div>
+            </FluentStack>
+            <FluentStack Orientation="Orientation.Vertical">
+                <FluentNumberInput Label="Num Ctx"
+                                   Step="1024"
+                                   Style="flex:1;"
+                                   @bind-Value="Model.NumCtx" />
+                    <div class="brand-text">
+                        Maximum model context window size.
+                    </div>   
+            </FluentStack>
         </FluentStack>
         <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
-            <FluentNumberInput Label="Top P"
+            <FluentStack Orientation="Orientation.Vertical">
+                <FluentNumberInput Label="Top P"
                                Step="0.1"
+                               Style="flex:1;"
                                @bind-Value="Model.TopP" />
-            <FluentNumberInput Label="Top K"
+                <div class="brand-text">
+                        Nucleus sampling probability threshold.
+                </div>
+            </FluentStack>
+            <FluentStack Orientation="Orientation.Vertical">
+                <FluentNumberInput Label="Top K"
+                               Style="flex:1;"
                                @bind-Value="Model.TopK" />
+                <div class="brand-text">
+                        Number of candidate tokens considered during sampling.
+                </div>
+            </FluentStack>
         </FluentStack>
         <FluentCheckbox @bind-Value="Model.IsEnabled">
             Enabled

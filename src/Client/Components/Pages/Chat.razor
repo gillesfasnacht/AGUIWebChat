@@ -19,23 +19,19 @@
     @* ============================================================
        Header
        ============================================================ *@
-
-    <header class="chat-header">
-        <div class="chat-title">
-            <h4 class="brand-text">.NET Assistant</h4>
-            <div class="chat-model-info">
-                <span>
-                    Thinking: @Settings.ThinkingEffort
-                </span>
-            </div>
-        </div>
-        <FluentButton Appearance="ButtonAppearance.Primary"
-                      IconStart="@(new Icons.Regular.Size20.Settings())"
-                      OnClick="OpenSettingsAsync">
-            Settings
-        </FluentButton>
+    <header>
+        <h1>Chat</h1>
+        <p>Interactive chat interface</p>
+        <fluent-divider />
+        <FluentStack Padding="@Padding.Vertical3" HorizontalAlignment="HorizontalAlignment.Left">
+            <FluentButton Appearance="ButtonAppearance.Primary" Style="width:100px"
+                            IconStart="@(new Icons.Regular.Size20.Settings())"
+                            OnClick="OpenSettingsAsync">
+                Settings
+            </FluentButton>   
+        </FluentStack>
     </header>
-
+    
     @* ============================================================
        Messages
        ============================================================ *@
@@ -135,11 +131,12 @@
 
     private async Task OpenSettingsAsync()
     {
-        await DialogService.ShowDrawerAsync<ChatSettingsPanel>(
-            options =>
-            {
-                options.Width = "380px";
-            });
+        await DialogService.ShowDrawerAsync<ChatSettingsPanel>(options =>
+        {
+            options.Modal = true;
+            options.Alignment = DialogAlignment.End;
+            
+        });
 
         await SettingsService.SaveAsync();
     }
