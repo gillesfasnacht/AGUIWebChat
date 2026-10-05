@@ -10,6 +10,8 @@ using System.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var serverUrl = builder.Configuration["AGUI_SERVER_URL"] ?? "http://localhost:5100";
+
 // Use Serilog for logging requests and events
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
@@ -24,17 +26,6 @@ builder.Services.AddHttpLogging(logging =>
 
     logging.CombineLogs = true;
 });
-
-string serverUrl = builder.Configuration["AGUI_SERVER_URL"] ?? "http://localhost:5100";
-
-// First stratup
-Log.Information("Starting AG-UI Web Chat Client");
-Log.Information("Machine Name : {MachineName}", Environment.MachineName);
-Log.Information("OS Version : {OSVersion}", Environment.OSVersion);
-Log.Information("DotNet Version : {DotNetVersion}", Environment.Version);
-Log.Information("UserName : {UserName}", Environment.UserName);
-Log.Information("Process Id : {ProcessId}", Process.GetCurrentProcess().Id);
-Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
 // Add services to the container.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
@@ -63,6 +54,15 @@ builder.Services.AddHttpClient<AgUiChatService>(client =>
 }).AddHttpMessageHandler<AgUiHttpLoggingHandler>();
 
 var app = builder.Build();
+
+// First stratup
+Log.Information("Starting AG-UI Web Chat Client");
+Log.Information("Machine Name : {MachineName}", Environment.MachineName);
+Log.Information("OS Version : {OSVersion}", Environment.OSVersion);
+Log.Information("DotNet Version : {DotNetVersion}", Environment.Version);
+Log.Information("UserName : {UserName}", Environment.UserName);
+Log.Information("Process Id : {ProcessId}", Process.GetCurrentProcess().Id);
+Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

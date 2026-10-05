@@ -1,5 +1,6 @@
 using AGUIWebChat.Contracts.AI;
 using AGUIWebChat.Contracts.AI.Models;
+using AGUIWebChat.Server.Domain.AI;
 using AGUIWebChat.Server.Mapping;
 using AGUIWebChat.Server.Services.AI;
 using AGUIWebChat.Server.Tests.Infrastructure;
@@ -237,6 +238,52 @@ namespace AGUIWebChat.Server.Tests.Services.AI
             Assert.False(modelExists);
             Assert.False(defaultsExist);
             Assert.False(effortsExist);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_WhenModelIsUsedByAgent_ShouldFail()
+        {
+            var cancellationToken = TestContext.Current.CancellationToken;
+
+            await using var database = await TestDbContextFactory.CreateAsync(cancellationToken);
+
+            var service =
+                new AIModelService(database.DbContext);
+
+            // Arrange : création du modèle via le service
+            var created = await service.CreateAsync(CreateGraniteModel(), cancellationToken);
+
+            // Création d'un agent utilisant ce modèle
+            var agent = new AIAgent
+            {
+                Name = "InvoiceAgent",
+                SystemPrompt = "Validate invoices.",
+                AIModelId = created.Id,
+                IsEnabled = true
+            };
+
+            database.DbContext.AIAgents.Add(agent);
+
+            await database.DbContext.SaveChangesAsync(cancellationToken);
+
+            // Act : la suppression du modèle doit être refusée
+            await Assert.ThrowsAsync<ModelValidationException>(() => service.DeleteAsync(created.Id, cancellationToken));
+
+            // On force une vraie relecture SQLite
+            database.DbContext.ChangeTracker.Clear();
+
+            // Assert : le modèle existe toujours
+            var modelExists = await database.DbContext.AIModels
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == created.Id, cancellationToken);
+
+            // Et l'agent existe toujours
+            var agentExists = await database.DbContext.AIAgents
+                .AsNoTracking()
+                .AnyAsync(x => x.Id == agent.Id, cancellationToken);
+
+            Assert.True(modelExists);
+            Assert.True(agentExists);
         }
 
         [Theory]

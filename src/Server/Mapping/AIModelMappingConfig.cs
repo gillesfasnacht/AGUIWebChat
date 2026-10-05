@@ -1,4 +1,5 @@
-﻿using AGUIWebChat.Contracts.AI.Models;
+﻿using AGUIWebChat.Contracts.AI.Agents;
+using AGUIWebChat.Contracts.AI.Models;
 using AGUIWebChat.Server.Domain.AI;
 using Mapster;
 
@@ -25,6 +26,11 @@ namespace AGUIWebChat.Server.Mapping
                 .Ignore(dest => dest.Provider)
                 .Ignore(dest => dest.Defaults)
                 .Ignore(dest => dest.ReasoningEfforts);
+
+            config.NewConfig<AIAgent, AIAgentEditModel>()
+                .Map(dest => dest.AIModelDisplayName, src => src.AIModel.DisplayName);
+
+            config.NewConfig<AIAgentEditModel, AIAgent>().Ignore(dest => dest.AIModel);
         }
     }
 }

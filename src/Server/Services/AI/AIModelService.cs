@@ -124,12 +124,19 @@ namespace AGUIWebChat.Server.Services.AI
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            var entity = await _dbContext.AIModels
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+            var entity = await _dbContext.AIModels.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
             if (entity is null)
             {
                 return;
+            }
+
+            var isUsedByAgent = await _dbContext.AIAgents.AnyAsync(x => x.AIModelId == id, cancellationToken);
+
+            if (isUsedByAgent)
+            {
+                throw new ModelValidationException($"AI model '{entity.DisplayName}' cannot be deleted " +
+                    "because it is used by one or more AI agents.");
             }
 
             _dbContext.AIModels.Remove(entity);
@@ -139,8 +146,7 @@ namespace AGUIWebChat.Server.Services.AI
 
         private async Task ValidateProviderAsync(int providerId, CancellationToken cancellationToken)
         {
-            var exists = await _dbContext.AIProviders
-                .AnyAsync(x => x.Id == providerId && x.IsEnabled, cancellationToken);
+            var exists = await _dbContext.AIProviders.AnyAsync(x => x.Id == providerId && x.IsEnabled, cancellationToken);
 
             if (!exists)
             {
@@ -154,13 +160,10 @@ namespace AGUIWebChat.Server.Services.AI
             int? currentModelId,
             CancellationToken cancellationToken)
         {
-            var exists = await _dbContext.AIModels
-                .AnyAsync(
-                    x => x.ProviderId == providerId &&
-                         x.ModelId == modelId &&
-                         (!currentModelId.HasValue ||
-                          x.Id != currentModelId.Value),
-                    cancellationToken);
+            var exists = await _dbContext.AIModels.AnyAsync(
+                x => x.ProviderId == providerId &&
+                x.ModelId == modelId && (!currentModelId.HasValue || x.Id != currentModelId.Value),
+                cancellationToken);
 
             if (exists)
             {
@@ -217,7 +220,6 @@ namespace AGUIWebChat.Server.Services.AI
         private static void Validate(AIModelEditModel model)
         {
             ValidateAnnotations(model);
-
             ValidateReasoning(model);
         }
 
@@ -258,9 +260,7 @@ namespace AGUIWebChat.Server.Services.AI
             }
 
             var duplicateValue = model.ReasoningEfforts
-                .GroupBy(
-                    x => x.Value.Trim(),
-                    StringComparer.OrdinalIgnoreCase)
+                .GroupBy(x => x.Value.Trim(), StringComparer.OrdinalIgnoreCase)
                 .Any(x => x.Count() > 1);
 
             if (duplicateValue)

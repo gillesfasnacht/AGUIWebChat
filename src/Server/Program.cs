@@ -62,15 +62,6 @@ builder.Services.AddHttpLogging(logging =>
     logging.CombineLogs = true;
 });
 
-// First stratup
-Log.Information("Starting AG-UI Web Chat Server");
-Log.Information("Machine Name : {MachineName}", Environment.MachineName);
-Log.Information("OS Version : {OSVersion}", Environment.OSVersion);
-Log.Information("DotNet Version : {DotNetVersion}", Environment.Version);
-Log.Information("UserName : {UserName}", Environment.UserName);
-Log.Information("Process Id : {ProcessId}", Process.GetCurrentProcess().Id);
-Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().ProcessName);
-
 // Add AGUI HTTP logging interceptor for logging HTTP requests and responses
 builder.Services.AddHttpLoggingInterceptor<AgUiHttpLoggingInterceptor>();
 builder.Services.AddSingleton<IAgUiSseEventLogger, AGUIWebChat.Server.Middleware.AgUiSseEventLogger>();
@@ -109,11 +100,23 @@ MapsterExtensions.RegisterMappings();
 // Register the AI model service for managing AI models
 builder.Services.AddScoped<IAIModelService, AIModelService>();
 
+// Register the AI agent service for managing AI agents
+builder.Services.AddScoped<IAIAgentService, AIAgentService>();
+
 // Add OpenTelemetry (ReasoningTelemetry) tracing for the application
 // Note: In production, consider using a more robust exporter (e.g., Jaeger, Zipkin, or Application Insights)
 // For this example, we will use a console exporter for simplicity
 // The tracing will be configured in the CreateTraceProviderConsole method below
 WebApplication app = builder.Build();
+
+// First stratup
+Log.Information("Starting AG-UI Web Chat Server");
+Log.Information("Machine Name : {MachineName}", Environment.MachineName);
+Log.Information("OS Version : {OSVersion}", Environment.OSVersion);
+Log.Information("DotNet Version : {DotNetVersion}", Environment.Version);
+Log.Information("UserName : {UserName}", Environment.UserName);
+Log.Information("Process Id : {ProcessId}", Process.GetCurrentProcess().Id);
+Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().ProcessName);
 
 using var enterpriseSupportTracerProvider = CreateTraceProviderConsole("EnterpriseSupportAgenceSource",
         ReasoningTelemetry.ActivitySourceName);
@@ -153,16 +156,16 @@ app.UseMiddleware<SseLoggingMiddleware>();
 
 app.MapAGUIServer("/ag-ui", enterpriseAgent);
 
-app.MapAIModelEndpoints();
 app.MapAIProviderEndpoints();
+app.MapAIModelEndpoints();
+app.MapAIAgentEndpoints();
 
 await app.RunAsync();
 
 // Create a trace provider for console output
 static TracerProvider CreateTraceProviderConsole(params string[] sourceNames)
 {
-    Log.Information("SERVER TRACE_PROVIDER console for {ActivitySources}",
-        string.Join(", ", sourceNames));
+    Log.Information("SERVER TRACE_PROVIDER console for {ActivitySources}", string.Join(", ", sourceNames));
 
     return Sdk.CreateTracerProviderBuilder()
         .AddSource(sourceNames)
