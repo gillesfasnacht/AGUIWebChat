@@ -1,3 +1,4 @@
+using AGUIWebChat.Server.Mapping;
 ﻿using AGUIWebChat.Contracts.AI;
 using AGUIWebChat.Contracts.AI.Agents;
 using AGUIWebChat.Server.Data;
@@ -20,6 +21,7 @@ namespace AGUIWebChat.Server.Tests.Services.AI
 
         public AIAgentServiceTests()
         {
+            MapsterExtensions.RegisterMappings();
             _connection = new SqliteConnection("DataSource=:memory:");
 
             _connection.Open();
@@ -252,7 +254,7 @@ namespace AGUIWebChat.Server.Tests.Services.AI
                 AIModelId = model.Id
             };
 
-            await Assert.ThrowsAsync<ModelValidationException>(() => _service.CreateAsync(duplicate, cancellationToken));
+            await Assert.ThrowsAsync<ModelConflictException>(() => _service.CreateAsync(duplicate, cancellationToken));
         }
 
         [Fact]
@@ -354,6 +356,60 @@ namespace AGUIWebChat.Server.Tests.Services.AI
             Assert.Equal("InvoiceAgent", updated.Name);
             Assert.Equal("Updated description", updated.Description);
             Assert.Equal("Updated prompt.", updated.SystemPrompt);
+        }
+
+        [Fact]
+        public async Task Names_ShouldBeNormalizedOnCreateAndUpdateAndRejectDuplicates()
+        {
+            var token = TestContext.Current.CancellationToken;
+            var model = await CreateModelAsync("normalized-name", ThinkingMode.None, token);
+            var agent = await _service.CreateAsync(new AIAgentEditModel
+            {
+                Name = " InvoiceAgent ", SystemPrompt = "Test.", AIModelId = model.Id
+            }, token);
+            Assert.Equal("InvoiceAgent", agent.Name);
+            await Assert.ThrowsAsync<ModelConflictException>(() => _service.CreateAsync(new AIAgentEditModel
+            {
+                Name = " InvoiceAgent ", SystemPrompt = "Test.", AIModelId = model.Id
+            }, token));
+            agent.Name = " RenamedAgent ";
+            var updated = await _service.UpdateAsync(agent, token);
+            Assert.Equal("RenamedAgent", updated.Name);
+            _dbContext.ChangeTracker.Clear();
+            var persisted = await _dbContext.AIAgents.AsNoTracking().SingleAsync(token);
+            Assert.Equal("RenamedAgent", persisted.Name);
+        }
+
+        [Theory]
+        [InlineData("name")]
+        [InlineData("description")]
+        [InlineData("effort")]
+        [InlineData("temperature")]
+        [InlineData("top-p")]
+        [InlineData("top-k")]
+        [InlineData("num-ctx")]
+        public async Task InvalidFields_ShouldBeRejectedOnCreateAndUpdate(string field)
+        {
+            var token = TestContext.Current.CancellationToken;
+            var model = await CreateModelAsync("validation-model", ThinkingMode.None, token);
+            var agent = await _service.CreateAsync(new AIAgentEditModel
+            {
+                Name = "ValidAgent", SystemPrompt = "Test.", AIModelId = model.Id
+            }, token);
+            switch (field)
+            {
+                case "name": agent.Name = new string('a', 201); break;
+                case "description": agent.Description = new string('a', 1001); break;
+                case "effort": agent.ReasoningEffort = new string('a', 101); break;
+                case "temperature": agent.Temperature = -0.1; break;
+                case "top-p": agent.TopP = 1.1; break;
+                case "top-k": agent.TopK = 0; break;
+                case "num-ctx": agent.NumCtx = 0; break;
+            }
+            await Assert.ThrowsAsync<ModelValidationException>(() => _service.CreateAsync(agent, token));
+            await Assert.ThrowsAsync<ModelValidationException>(() => _service.UpdateAsync(agent, token));
+            _dbContext.ChangeTracker.Clear();
+            Assert.Equal("ValidAgent", (await _dbContext.AIAgents.AsNoTracking().SingleAsync(token)).Name);
         }
 
         private async Task<AIModel> CreateModelAsync(

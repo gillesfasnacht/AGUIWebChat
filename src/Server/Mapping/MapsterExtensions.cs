@@ -1,14 +1,18 @@
-﻿using Mapster;
+using Mapster;
 
 namespace AGUIWebChat.Server.Mapping
 {
     public static class MapsterExtensions
     {
+        private static readonly Lazy<bool> MappingsRegistered = new(() =>
+        {
+            AIModelMappingConfig.Register(TypeAdapterConfig.GlobalSettings);
+            return true;
+        });
+
         public static void RegisterMappings()
         {
-            var config = TypeAdapterConfig.GlobalSettings;
-
-            AIModelMappingConfig.Register(config);
+            _ = MappingsRegistered.Value;
         }
     }
 }

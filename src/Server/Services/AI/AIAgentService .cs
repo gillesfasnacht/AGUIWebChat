@@ -3,6 +3,7 @@ using AGUIWebChat.Contracts.AI.Agents;
 using AGUIWebChat.Server.Data;
 using AGUIWebChat.Server.Domain.AI;
 using Mapster;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
 namespace AGUIWebChat.Server.Services.AI
@@ -47,10 +48,11 @@ namespace AGUIWebChat.Server.Services.AI
         public async Task<AIAgentEditModel> CreateAsync(AIAgentEditModel agent, CancellationToken cancellationToken = default)
         {
             Validate(agent);
+            var normalizedName = agent.Name.Trim();
 
             var model = await GetModelAsync(agent.AIModelId, cancellationToken);
 
-            await ValidateNameIsUniqueAsync(agent.Name, null, cancellationToken);
+            await ValidateNameIsUniqueAsync(normalizedName, null, cancellationToken);
 
             ValidateReasoningEffort(agent, model);
 
@@ -59,6 +61,7 @@ namespace AGUIWebChat.Server.Services.AI
             // L'identité appartient à SQL Server.
             entity.Id = 0;
 
+            entity.Name = normalizedName;
             entity.AIModel = model;
 
             _dbContext.AIAgents.Add(entity);
@@ -71,6 +74,7 @@ namespace AGUIWebChat.Server.Services.AI
         public async Task<AIAgentEditModel> UpdateAsync(AIAgentEditModel agent, CancellationToken cancellationToken = default)
         {
             Validate(agent);
+            var normalizedName = agent.Name.Trim();
 
             var entity = await _dbContext.AIAgents
                 .Include(x => x.AIModel)
@@ -78,17 +82,18 @@ namespace AGUIWebChat.Server.Services.AI
 
             if (entity is null)
             {
-                throw new KeyNotFoundException($"AI agent with id {agent.Id} was not found.");
+                throw new ModelNotFoundException($"AI agent with id {agent.Id} was not found.");
             }
 
             var model = await GetModelAsync(agent.AIModelId, cancellationToken);
 
-            await ValidateNameIsUniqueAsync(agent.Name, agent.Id, cancellationToken);
+            await ValidateNameIsUniqueAsync(normalizedName, agent.Id, cancellationToken);
 
             ValidateReasoningEffort(agent, model);
 
             agent.Adapt(entity);
 
+            entity.Name = normalizedName;
             entity.AIModel = model;
 
             await _dbContext.SaveChangesAsync(cancellationToken);
@@ -102,7 +107,7 @@ namespace AGUIWebChat.Server.Services.AI
 
             if (entity is null)
             {
-                throw new KeyNotFoundException($"AI agent with id {id} was not found.");
+                throw new ModelNotFoundException($"AI agent with id {id} was not found.");
             }
 
             _dbContext.AIAgents.Remove(entity);
@@ -112,19 +117,10 @@ namespace AGUIWebChat.Server.Services.AI
 
         private static void Validate(AIAgentEditModel agent)
         {
-            if (string.IsNullOrWhiteSpace(agent.Name))
+            var results = new List<ValidationResult>();
+            if (!Validator.TryValidateObject(agent, new ValidationContext(agent), results, validateAllProperties: true))
             {
-                throw new ModelValidationException("Agent name is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(agent.SystemPrompt))
-            {
-                throw new ModelValidationException("System prompt is required.");
-            }
-
-            if (agent.AIModelId <= 0)
-            {
-                throw new ModelValidationException("An AI model is required.");
+                throw new ModelValidationException(string.Join(" ", results.Select(x => x.ErrorMessage)));
             }
         }
 
@@ -186,7 +182,7 @@ namespace AGUIWebChat.Server.Services.AI
 
             if (exists)
             {
-                throw new ModelValidationException($"An AI agent named '{normalizedName}' already exists.");
+                throw new ModelConflictException($"An AI agent named '{normalizedName}' already exists.");
             }
         }
     }

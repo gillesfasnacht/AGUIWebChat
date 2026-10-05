@@ -20,7 +20,10 @@ namespace AGUIWebChat.Server.Endpoints
             {
                 var agent = await service.GetAgentAsync(id, cancellationToken);
 
-                return agent is null ? Results.NotFound() : Results.Ok(agent);
+                if (agent is null)
+                    throw new ModelNotFoundException($"AI agent with id {id} was not found.");
+
+                return Results.Ok(agent);
             });
 
             group.MapPost("/", async (AIAgentEditModel model, IAIAgentService service, CancellationToken cancellationToken) =>
@@ -34,7 +37,7 @@ namespace AGUIWebChat.Server.Endpoints
             {
                 if (id != model.Id)
                 {
-                    return Results.BadRequest();
+                    throw new ModelValidationException("The route id does not match the agent id.");
                 }
 
                 var updated = await service.UpdateAsync(model, cancellationToken);

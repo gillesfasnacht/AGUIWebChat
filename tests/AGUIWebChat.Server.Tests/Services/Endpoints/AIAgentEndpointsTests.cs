@@ -148,6 +148,11 @@ namespace AGUIWebChat.Server.Tests.Services.Endpoints
         [InlineData("missing-model", 400)]
         [InlineData("invalid-effort", 400)]
         [InlineData("mismatch", 400)]
+        [InlineData("missing-update", 404)]
+        [InlineData("missing-delete", 404)]
+        [InlineData("missing-get", 404)]
+        [InlineData("duplicate", 409)]
+        [InlineData("invalid-temperature", 400)]
         public async Task Errors_ShouldReturnProblemDetails(string scenario, int expectedStatus)
         {
             var cancellationToken = TestContext.Current.CancellationToken;
@@ -177,6 +182,19 @@ namespace AGUIWebChat.Server.Tests.Services.Endpoints
 
             switch (scenario)
             {
+                case "duplicate":
+                    using (var first = await client.PostAsJsonAsync("/api/agents", agent, cancellationToken))
+                        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+                    break;
+
+                case "invalid-temperature":
+                    agent.Temperature = 3;
+                    break;
+
+                case "missing-update":
+                    agent.Id = 999;
+                    break;
+
                 case "missing-model":
                     agent.AIModelId = 999999;
                     break;
@@ -192,6 +210,9 @@ namespace AGUIWebChat.Server.Tests.Services.Endpoints
 
             using var response = scenario switch
             {
+                "missing-get" => await client.GetAsync("/api/agents/999", cancellationToken),
+                "missing-delete" => await client.DeleteAsync("/api/agents/999", cancellationToken),
+                "missing-update" => await client.PutAsJsonAsync("/api/agents/999", agent, cancellationToken),
                 "mismatch" => await client.PutAsJsonAsync("/api/agents/999", agent, cancellationToken),
                 _ => await client.PostAsJsonAsync("/api/agents", agent, cancellationToken)
             };
@@ -203,6 +224,15 @@ namespace AGUIWebChat.Server.Tests.Services.Endpoints
 
             Assert.Equal(expectedStatus, problem.GetProperty("status").GetInt32());
             Assert.False(string.IsNullOrWhiteSpace(problem.GetProperty("title").GetString()));
+            var detail = problem.GetProperty("detail").GetString();
+            Assert.False(string.IsNullOrWhiteSpace(detail));
+            if (expectedStatus == 400)
+                Assert.Contains(detail, problem.GetProperty("errors").GetProperty("model")
+                    .EnumerateArray().Select(x => x.GetString()));
+            if (scenario == "mismatch")
+                Assert.Equal("The route id does not match the agent id.", detail);
+            if (scenario == "invalid-temperature")
+                Assert.Equal("Temperature must be between 0 and 2.", detail);
         }
 
         private static AIModelEditModel CreateGraniteModel()
