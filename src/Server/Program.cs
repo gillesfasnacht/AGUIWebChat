@@ -38,6 +38,18 @@ builder.Services.AddSingleton<OllamaApiClient>(services =>
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
 
+// Generate OpenAPI documentation for the HTTP endpoints.
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.OpenApiInfo
+    {
+        Title = "AG-UI WebChat API",
+        Version = "v1",
+        Description = "AI provider, model and agent catalogue endpoints."
+    });
+});
+
 // Add SignalR for real-time communication
 builder.Services.AddSignalR();
 
@@ -72,6 +84,12 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
+// Swashbuckle uses MVC JSON options to describe schemas; match the Minimal API enum format.
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 // Add AGUI server services for hosting the AG-UI interface
 builder.Services.AddAGUIServer();
 
@@ -80,8 +98,7 @@ if (!builder.Environment.IsEnvironment("Testing"))
 {
     builder.Services.AddDbContext<ChatDbContext>(options =>
     {
-        var connectionString =
-            builder.Configuration.GetConnectionString("ChatDatabase")
+        var connectionString = builder.Configuration.GetConnectionString("ChatDatabase")
             ?? throw new InvalidOperationException("Connection string 'ChatDatabase' not found.");
 
         options.UseSqlServer(connectionString);
@@ -108,6 +125,17 @@ builder.Services.AddScoped<IAIAgentService, AIAgentService>();
 // For this example, we will use a console exporter for simplicity
 // The tracing will be configured in the CreateTraceProviderConsole method below
 WebApplication app = builder.Build();
+
+// Expose the interactive documentation during development and integration tests.
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("v1/swagger.json", "AG-UI WebChat API v1");
+        options.DocumentTitle = "AG-UI WebChat API";
+    });
+}
 
 // First stratup
 Log.Information("Starting AG-UI Web Chat Server");

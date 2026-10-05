@@ -59,6 +59,21 @@ Open `http://localhost:5245`. The client's HTTPS profile uses `https://localhost
 
 The server exposes `/ag-ui`, `/telemetry`, and `/api/models`. The client uses `AGUI_SERVER_URL` for chat, telemetry, and catalogue requests. Open `/models` in the client to view the catalogue. The **Stop** button cancels the current chat request; leaving the chat page also triggers cancellation.
 
+## Swagger API Documentation
+
+With the server's development profile running, open [Swagger UI](http://localhost:5100/swagger).
+The OpenAPI document is available at http://localhost:5100/swagger/v1/swagger.json.
+
+Swagger groups the catalogue endpoints under **AI Providers**, **AI Models**, and **AI Agents**.
+Expand an operation, select **Try it out**, enter the parameters or JSON body, then select **Execute**.
+Create a model before creating an agent and use the returned model identifier in the agent's request.
+Write operations update the configured database.
+
+The documentation describes request DTOs, response DTOs and the expected error responses.
+Validation errors include the precise messages in `errors.model`.
+Swagger is enabled in the Development and Testing environments; it is disabled in Production.
+The SignalR telemetry connection is not an ordinary REST operation.
+
 ## Settings and Telemetry
 
 Invalid chat inference settings fall back to their default values. Server-side limits are:
