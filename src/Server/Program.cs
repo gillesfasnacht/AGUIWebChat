@@ -15,10 +15,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using OllamaSharp;
-using OpenTelemetry;
 using OpenTelemetry.Trace;
 using Serilog;
-using System.Diagnostics;
 using System.Text.Json.Serialization;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -37,6 +35,18 @@ builder.Services.AddSingleton<OllamaApiClient>(services =>
 // Use Serilog for logging requests and events
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
+
+// Add a hosted service to log application lifecycle events (start, stop, etc.)
+builder.Services.AddHostedService<ApplicationLifecycleLogger>();
+
+// Add OpenTelemetry tracing for the application
+builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing =>
+    {
+        tracing.AddSource("EnterpriseSupportAgenceSource", ReasoningTelemetry.ActivitySourceName)
+               .SetSampler(new AlwaysOnSampler())
+               .AddConsoleExporter();
+    });
 
 // Generate OpenAPI documentation for the HTTP endpoints.
 builder.Services.AddEndpointsApiExplorer();
@@ -137,18 +147,6 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
     });
 }
 
-// First stratup
-Log.Information("Starting AG-UI Web Chat Server");
-Log.Information("Machine Name : {MachineName}", Environment.MachineName);
-Log.Information("OS Version : {OSVersion}", Environment.OSVersion);
-Log.Information("DotNet Version : {DotNetVersion}", Environment.Version);
-Log.Information("UserName : {UserName}", Environment.UserName);
-Log.Information("Process Id : {ProcessId}", Process.GetCurrentProcess().Id);
-Log.Information("Process Name : {ProcessName}", Process.GetCurrentProcess().ProcessName);
-
-using var enterpriseSupportTracerProvider = CreateTraceProviderConsole("EnterpriseSupportAgenceSource",
-        ReasoningTelemetry.ActivitySourceName);
-
 var telemetryHub = app.Services.GetRequiredService<IHubContext<TelemetryHub>>();
 
 // Create an AI agent for enterprise support using the Ollama API client
@@ -189,15 +187,3 @@ app.MapAIModelEndpoints();
 app.MapAIAgentEndpoints();
 
 await app.RunAsync();
-
-// Create a trace provider for console output
-static TracerProvider CreateTraceProviderConsole(params string[] sourceNames)
-{
-    Log.Information("SERVER TRACE_PROVIDER console for {ActivitySources}", string.Join(", ", sourceNames));
-
-    return Sdk.CreateTracerProviderBuilder()
-        .AddSource(sourceNames)
-        .SetSampler(new AlwaysOnSampler())
-        .AddConsoleExporter()
-        .Build();
-}

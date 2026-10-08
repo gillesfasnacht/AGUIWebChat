@@ -38,6 +38,7 @@ public sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) : I
         else
             await context.Response.WriteAsJsonAsync(problem, options: null,
                 contentType: "application/problem+json", cancellationToken: cancellationToken);
+
         return true;
     }
 }
