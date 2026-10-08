@@ -4,8 +4,7 @@ namespace AGUIWebChat.Server.Middleware
 {
     public sealed class AgUiHttpLoggingInterceptor : IHttpLoggingInterceptor
     {
-        public ValueTask OnRequestAsync(
-            HttpLoggingInterceptorContext logContext)
+        public ValueTask OnRequestAsync(HttpLoggingInterceptorContext logContext)
         {
             var path = logContext.HttpContext.Request.Path;
 
@@ -19,15 +18,13 @@ namespace AGUIWebChat.Server.Middleware
             }
             else
             {
-                logContext.LoggingFields =
-                    HttpLoggingFields.None;
+                logContext.LoggingFields = HttpLoggingFields.None;
             }
 
             return ValueTask.CompletedTask;
         }
 
-        public ValueTask OnResponseAsync(
-            HttpLoggingInterceptorContext logContext)
+        public ValueTask OnResponseAsync(HttpLoggingInterceptorContext logContext)
         {
             return ValueTask.CompletedTask;
         }
