@@ -6,4 +6,8 @@
   <ItemGroup>
     <ProjectReference Include="../../src/Server/AGUIWebChat.Server.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Update="xunit.runner.visualstudio" Version="4.0.1" />
+    <PackageReference Update="xunit.v3" Version="4.0.2" />
+  </ItemGroup>
 </Project>
