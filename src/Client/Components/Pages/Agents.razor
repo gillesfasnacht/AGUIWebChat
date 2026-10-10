@@ -1,0 +1,243 @@
+﻿@page "/agents"
+
+@using AGUIWebChat.Contracts.AI.Agents
+@using AGUIWebChat.Client.Services.AI
+@using AGUIWebChat.Client.Components.AI
+@using Microsoft.FluentUI.AspNetCore.Components
+
+@inject AIAgentApiClient AgentApiClient
+@inject AIModelApiClient ModelApiClient
+@inject IDialogService DialogService
+
+<PageTitle>Agents</PageTitle>
+
+<h1>Agents</h1>
+<p>Manage the AI agents and their model configurations.</p>
+
+<FluentDivider />
+
+@if (_loading)
+{
+    <br />
+    <FluentSpinner />
+}
+else if (_errorMessage is not null)
+{
+    <FluentMessageBar Intent="MessageBarIntent.Error">
+        @_errorMessage
+    </FluentMessageBar>
+}
+else
+{
+    <FluentStack Padding="@Padding.Vertical3"
+                 HorizontalAlignment="HorizontalAlignment.Left">
+
+        <FluentButton Appearance="ButtonAppearance.Primary"
+                      IconStart="@(new Icons.Regular.Size20.Add())"
+                      OnClick="AddAgentAsync">
+            Add
+        </FluentButton>
+
+        <FluentButton IconStart="@(new Icons.Regular.Size20.Edit())"
+                      OnClick="@(() => EditAgentAsync(SelectedItems.First()))"
+                      Margin="@Margin.Horizontal2"
+                      Disabled="@(SelectedItems.Count() != 1)">
+            Edit
+        </FluentButton>
+
+        <FluentButton IconStart="@(new Icons.Regular.Size20.Delete())"
+                      OnClick="@(() => DeleteAgentAsync(SelectedItems.First()))"
+                      Margin="@Margin.Horizontal2"
+                      Disabled="@(SelectedItems.Count() == 0)">
+            Delete
+        </FluentButton>
+
+    </FluentStack>
+
+    <FluentDataGrid TGridItem="AIAgentEditModel"
+                    Items="@_agents.AsQueryable()"
+                    ShowHover="true"
+                    ReorderableColumns="true"
+                    HeaderCellAsButtonWithMenu="true"
+                    ResizableColumns="true">
+
+        <SelectColumn TGridItem="AIAgentEditModel"
+                      SelectMode="@DataGridSelectMode.Single"
+                      SelectFromEntireRow="true"
+                      @bind-SelectedItems="@SelectedItems" />
+
+        <PropertyColumn Property="@(x => x.Name)"
+                        Title="Agent" />
+
+        <PropertyColumn Property="@(x => x.Description)"
+                        Title="Description" />
+
+        <PropertyColumn Property="@(x => x.AIModelDisplayName)"
+                        Title="Model" />
+
+        <PropertyColumn Property="@(x => x.ReasoningEffort)"
+                        Title="Reasoning" />
+
+        <TemplateColumn Title="Enabled">
+            <ChildContent>
+                @if (context.IsEnabled)
+                {
+                    <FluentIcon Value="@(new Icons.Regular.Size20.CheckmarkCircle())" />
+                }
+                else
+                {
+                    <FluentIcon Value="@(new Icons.Regular.Size20.DismissCircle())" />
+                }
+            </ChildContent>
+        </TemplateColumn>
+
+    </FluentDataGrid>
+}
+
+@code {
+    private IReadOnlyList<AIAgentEditModel> _agents = [];
+    private IEnumerable<AIAgentEditModel> SelectedItems = [];
+
+    private bool _loading = true;
+    private string? _errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAgentsAsync();
+    }
+
+    private async Task LoadAgentsAsync()
+    {
+        _loading = true;
+        _errorMessage = null;
+
+        try
+        {
+            _agents = await AgentApiClient.GetAgentsAsync();
+            SelectedItems = [];
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unable to load AI agents: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task AddAgentAsync()
+    {
+        _errorMessage = null;
+
+        try
+        {
+            var models = await ModelApiClient.GetModelsAsync();
+
+            var availableModels = models
+                .Where(x => x.IsEnabled)
+                .ToList();
+
+            if (availableModels.Count == 0)
+            {
+                _errorMessage = "No active AI model is available.";
+                return;
+            }
+
+            var newAgent = new AIAgentEditModel
+            {
+                IsEnabled = true,
+                AIModelId = availableModels[0].Id
+            };
+
+            var result = await DialogService.ShowDrawerAsync<AgentPanel>(options =>
+            {
+                options.Modal = true;
+                options.Alignment = DialogAlignment.End;
+
+                options.Parameters.Add(nameof(AgentPanel.Agent), newAgent);
+                options.Parameters.Add(nameof(AgentPanel.IsNew), true);
+                options.Parameters.Add(nameof(AgentPanel.Models), availableModels);
+
+                options.Footer.PrimaryAction.Label = "Add";
+                options.Footer.SecondaryAction.Label = "Cancel";
+            });
+
+            if (result.Cancelled) return;
+
+            await AgentApiClient.CreateAsync(newAgent);
+            await LoadAgentsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unable to create AI agent: {ex.Message}";
+        }
+    }
+
+    private async Task EditAgentAsync(AIAgentEditModel agent)
+    {
+        _errorMessage = null;
+
+        try
+        {
+            var currentAgent =
+                await AgentApiClient.GetAgentAsync(agent.Id);
+
+            if (currentAgent is null)
+            {
+                _errorMessage = $"The agent {agent.Name} no longer exists.";
+                return;
+            }
+
+            var models = await ModelApiClient.GetModelsAsync();
+
+            var availableModels = models
+                .Where(x => x.IsEnabled || x.Id == currentAgent.AIModelId)
+                .ToList();
+
+            var result = await DialogService.ShowDrawerAsync<AgentPanel>(options =>
+            {
+                options.Modal = true;
+                options.Alignment = DialogAlignment.End;
+
+                options.Parameters.Add(nameof(AgentPanel.Agent), currentAgent);
+                options.Parameters.Add(nameof(AgentPanel.Models), availableModels);
+
+                options.Footer.PrimaryAction.Label = "Save";
+                options.Footer.SecondaryAction.Label = "Cancel";
+            });
+
+            if (result.Cancelled) return;
+
+            await AgentApiClient.UpdateAsync(currentAgent);
+            await LoadAgentsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unable to update AI agent: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteAgentAsync(AIAgentEditModel agent)
+    {
+        _errorMessage = null;
+
+        var result = await DialogService.ShowConfirmationAsync(
+            $"Do you really want to delete the agent « {agent.Name} » ?",
+            "Deleting an AI agent",
+            "Deletion Confirmation",
+            "Cancel");
+
+        if (result.Cancelled) return;
+
+        try
+        {
+            await AgentApiClient.DeleteAsync(agent.Id);
+            await LoadAgentsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Unable to delete AI agent: {ex.Message}";
+        }
+    }
+}

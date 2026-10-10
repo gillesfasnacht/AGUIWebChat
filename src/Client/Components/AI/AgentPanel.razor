@@ -1,0 +1,247 @@
+﻿@implements IDisposable
+@using System.ComponentModel.DataAnnotations
+@using AGUIWebChat.Contracts.AI
+@using AGUIWebChat.Contracts.AI.Agents
+@using AGUIWebChat.Contracts.AI.Models
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<FluentDialogBody>
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="12" HorizontalAlignment="HorizontalAlignment.Stretch">
+        <EditForm EditContext="@_editContext" OnSubmit="SubmitAsync" novalidate="true">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <FluentDivider />
+
+            @* Agent *@
+            <h4 class="brand-text">Agent</h4>
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="12">
+                <FluentTextInput Label="Name"
+                                 @bind-Value="Agent.Name" />
+                <FluentTextInput Label="Description"
+                                 @bind-Value="Agent.Description" />
+                <FluentTextArea Label="System prompt"
+                                Rows="8"
+                                Style="width:100%;"
+                                @bind-Value="Agent.SystemPrompt" />
+            </FluentStack>
+
+            @* Model selection *@
+            <h4 class="brand-text">Model</h4>
+            <FluentSelect TOption="AIModelEditModel"
+                          TValue="int"
+                          Label="AI model"
+                          Items="@Models"
+                          OptionText="@(model => model.DisplayName)"
+                          OptionValue="@(model => model.Id)"
+                          @bind-Value="Agent.AIModelId"
+                          @bind-Value:after="ModelChanged" />
+            <FluentAccordion>
+                <FluentAccordionItem Header="Advanced configuration">
+                    
+                    @* Reasoning *@
+                    <h4 class="brand-text">Reasoning</h4>
+                    @if (SelectedModel?.ThinkingMode == ThinkingMode.Effort)
+                    {
+                        <FluentSelect TOption="ReasoningEffortEditModel"
+                                      TValue="string"
+                                      Label="Reasoning effort"
+                                      Items="@AvailableEfforts"
+                                      OptionText="@(effort => effort.DisplayName)"
+                                      OptionValue="@(effort => effort.Value)"
+                                      @bind-Value="Agent.ReasoningEffort"
+                                      Placeholder="Inherit model default" />
+                    }
+                    else if (SelectedModel?.ThinkingMode == ThinkingMode.OnOff)
+                    {
+                        <FluentMessageBar Intent="MessageBarIntent.Info">
+                            Agent-level reasoning configuration is not yet available for this mode.
+                        </FluentMessageBar>
+                    }
+
+                    @* Model parameter overrides *@
+                    <h4 class="brand-text">Model parameter overrides</h4>
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
+                        <FluentNumberInput Label="Temperature"
+                                           Step="0.1"
+                                           Style="width:100%;"
+                                           Placeholder="@FormatDefault(SelectedModel?.Temperature)"
+                                           @bind-Value="Agent.Temperature" />
+                        <FluentNumberInput Label="Num Ctx"
+                                           Step="1024"
+                                           Style="width:100%;"
+                                           Placeholder="@FormatDefault(SelectedModel?.NumCtx)"
+                                           @bind-Value="Agent.NumCtx" />
+                    </FluentStack>
+                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
+                        <FluentNumberInput Label="Top P"
+                                           Step="0.1"
+                                           Style="width:100%;"
+                                           Placeholder="@FormatDefault(SelectedModel?.TopP)"
+                                           @bind-Value="Agent.TopP" />
+                        <FluentNumberInput Label="Top K"
+                                           Style="width:100%;"
+                                           Placeholder="@FormatDefault(SelectedModel?.TopK)"
+                                           @bind-Value="Agent.TopK" />
+                    </FluentStack>
+                    <FluentMessageBar Intent="MessageBarIntent.Info">
+                        Grey values are inherited from the selected model.
+                        Enter a value to override the model default.
+                        Clear the field to restore inheritance.
+                    </FluentMessageBar>                    
+                </FluentAccordionItem>
+            </FluentAccordion>
+            <FluentCheckbox @bind-Value="Agent.IsEnabled">
+                Enabled
+            </FluentCheckbox>
+        </EditForm>
+    </FluentStack>
+</FluentDialogBody>
+
+@code {
+    [Parameter]
+    public bool IsNew { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<AIModelEditModel> Models { get; set; } = [];
+
+    [Parameter]
+    public AIAgentEditModel Agent { get; set; } = new();
+
+    [CascadingParameter]
+    public IDialogInstance? DialogInstance { get; set; }
+
+    private EditContext _editContext = default!;
+    private ValidationMessageStore _validationMessages = default!;
+    private bool _validationAttempted;
+    private bool _closing;
+
+    private AIModelEditModel? SelectedModel => Models.FirstOrDefault(x => x.Id == Agent.AIModelId);
+
+    private IReadOnlyList<ReasoningEffortEditModel> AvailableEfforts =>
+        SelectedModel?.ReasoningEfforts.OrderBy(x => x.SortOrder).ToList() ?? [];
+
+    protected override void OnInitialized()
+    {
+        if (IsNew && Agent.AIModelId <= 0 && Models.Count > 0)
+        {
+            Agent.AIModelId = Models[0].Id;
+        }
+
+        _editContext = new EditContext(Agent);
+        _validationMessages = new ValidationMessageStore(_editContext);
+        _editContext.OnValidationRequested += ValidateAgent;
+        _editContext.OnFieldChanged += FieldChanged;
+
+        if (DialogInstance is not null)
+        {
+            DialogInstance.Options.Header.Title = IsNew ? "Add Agent" : $"Edit {Agent.Name}";
+            DialogInstance.Options.Header.CloseAction.Visible = true;
+            DialogInstance.Options.Footer.PrimaryAction.Disabled = false;
+            DialogInstance.Options.Footer.PrimaryAction.OnClickAsync = _ => SubmitAsync();
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        if (_closing) return;
+
+        _validationAttempted = true;
+
+        if (_editContext.Validate() && DialogInstance is not null)
+        {
+            _closing = true;
+            await DialogInstance.CloseAsync();
+        }
+    }
+
+    private void FieldChanged(object? sender, FieldChangedEventArgs args)
+    {
+        if (_validationAttempted)
+        {
+            _editContext.Validate();
+        }
+    }
+
+    private void Revalidate()
+    {
+        if (_validationAttempted)
+        {
+            _editContext.Validate();
+        }
+    }
+
+    private void ValidateAgent(object? sender, ValidationRequestedEventArgs args)
+    {
+        _validationMessages.Clear();
+
+        if (string.IsNullOrWhiteSpace(Agent.Name))
+        {
+            AddError(nameof(Agent.Name), "Agent name is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(Agent.SystemPrompt))
+        {
+            AddError(nameof(Agent.SystemPrompt), "System prompt is required.");
+        }
+
+        if (SelectedModel is null)
+        {
+            AddError(nameof(Agent.AIModelId), "A valid AI model must be selected.");
+        }
+        else
+        {
+            if (!SelectedModel.IsEnabled)
+            {
+                AddError(nameof(Agent.AIModelId), "The selected AI model is disabled.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(Agent.ReasoningEffort))
+            {
+                if (SelectedModel.ThinkingMode != ThinkingMode.Effort || !AvailableEfforts.
+                    Any(x => string.Equals(x.Value, Agent.ReasoningEffort, StringComparison.OrdinalIgnoreCase)))
+                {
+                    AddError(nameof(Agent.ReasoningEffort), "The selected reasoning effort is not supported by this model.");
+                }
+            }
+        }
+
+        if (Agent.Temperature is < 0 or > 2)
+        {
+            AddError(nameof(Agent.Temperature), "Temperature must be between 0 and 2.");
+        }
+
+        if (Agent.TopP is < 0 or > 1)
+        {
+            AddError(nameof(Agent.TopP), "TopP must be between 0 and 1.");
+        }
+
+        _editContext.NotifyValidationStateChanged();
+    }
+
+    private void AddError(string property, string message)
+    {
+        _validationMessages.Add(new FieldIdentifier(Agent, property), message);
+    }
+
+    private void ModelChanged()
+    {
+        Agent.ReasoningEffort = null;
+        Revalidate();
+    }
+
+    private static string FormatDefault<T>(T? value) where T : struct
+    {
+        return value?.ToString() ?? "Not configured";
+    }
+
+    public void Dispose()
+    {
+        _editContext.OnValidationRequested -= ValidateAgent;
+        _editContext.OnFieldChanged -= FieldChanged;
+
+        if (DialogInstance is not null)
+        {
+            DialogInstance.Options.Footer.PrimaryAction.OnClickAsync = null;
+        }
+    }
+}

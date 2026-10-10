@@ -1,0 +1,4 @@
+/* CSS for AgentPanel component */
+.brand-text {
+    color: var(--colorBrandForeground1);
+}

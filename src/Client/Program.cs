@@ -46,6 +46,12 @@ builder.Services.AddHttpClient<AIProviderApiClient>(client =>
     client.BaseAddress = new Uri(serverUrl);
 });
 
+// Add HttpClient for AIAgentApiClient (/api/agents)
+builder.Services.AddHttpClient<AIAgentApiClient>(client =>
+{
+    client.BaseAddress = new Uri(serverUrl);
+});
+
 // AG-UI client SSE event logger
 builder.Services.AddSingleton<IAgUiSseEventLogger, AgUiClientSseEventLogger>();
 builder.Services.AddTransient<AgUiHttpLoggingHandler>();
