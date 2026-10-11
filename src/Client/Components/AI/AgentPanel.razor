@@ -46,11 +46,11 @@
                         <FluentSelect TOption="ReasoningEffortEditModel"
                                       TValue="string"
                                       Label="Reasoning effort"
-                                      Items="@AvailableEfforts"
+                                      Items="@EffortOptions"
                                       OptionText="@(effort => effort.DisplayName)"
                                       OptionValue="@(effort => effort.Value)"
-                                      @bind-Value="Agent.ReasoningEffort"
-                                      Placeholder="Inherit model default" />
+                                      @bind-Value="SelectedEffort"
+                                      @bind-Value:after="ReasoningEffortChanged" />
                     }
                     else if (SelectedModel?.ThinkingMode == ThinkingMode.OnOff)
                     {
@@ -125,6 +125,20 @@
 
     private IReadOnlyList<ReasoningEffortEditModel> AvailableEfforts =>
         SelectedModel?.ReasoningEfforts.OrderBy(x => x.SortOrder).ToList() ?? [];
+
+    private IReadOnlyList<ReasoningEffortEditModel> EffortOptions =>
+        [new() { DisplayName = "Inherit model default", Value = string.Empty }, .. AvailableEfforts];
+
+    private string SelectedEffort
+    {
+        get => Agent.ReasoningEffort ?? string.Empty;
+        set => Agent.ReasoningEffort = string.IsNullOrWhiteSpace(value) ? null : value;
+    }
+
+    private void ReasoningEffortChanged()
+    {
+        _editContext.NotifyFieldChanged(new FieldIdentifier(Agent, nameof(Agent.ReasoningEffort)));
+    }
 
     protected override void OnInitialized()
     {

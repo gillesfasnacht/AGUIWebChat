@@ -15,16 +15,23 @@
 <p>Manage the AI models available to agents.</p>
 <FluentDivider />
 
-@if (_loading)
-{
-    <br />
-    <FluentSpinner />
-}
-else if (_errorMessage is not null)
+@if (_errorMessage is not null)
 {
     <FluentMessageBar Intent="MessageBarIntent.Error">
         @_errorMessage
     </FluentMessageBar>
+    @if (_loadFailed)
+    {
+        <FluentButton OnClick="LoadModelsAsync" Disabled="@_loading">
+            Retry
+        </FluentButton>
+    }
+}
+
+@if (_loading)
+{
+    <br />
+    <FluentSpinner />
 }
 else
 {
@@ -82,6 +89,7 @@ else
     private IReadOnlyList<AIModelEditModel> _models = [];
     private IEnumerable<AIModelEditModel> SelectedItems = [];
     private bool _loading = true;
+    private bool _loadFailed;
     private string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -92,14 +100,17 @@ else
     private async Task LoadModelsAsync()
     {
         _loading = true;
+        _loadFailed = false;
         _errorMessage = null;
 
         try
         {
             _models = await ModelApiClient.GetModelsAsync();
+            SelectedItems = [];
         }
         catch (Exception ex)
         {
+            _loadFailed = true;
             _errorMessage = $"Unable to load AI models: {ex.Message}";
         }
         finally

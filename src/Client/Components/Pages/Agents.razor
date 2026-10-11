@@ -16,16 +16,23 @@
 
 <FluentDivider />
 
-@if (_loading)
-{
-    <br />
-    <FluentSpinner />
-}
-else if (_errorMessage is not null)
+@if (_errorMessage is not null)
 {
     <FluentMessageBar Intent="MessageBarIntent.Error">
         @_errorMessage
     </FluentMessageBar>
+    @if (_loadFailed)
+    {
+        <FluentButton OnClick="LoadAgentsAsync" Disabled="@_loading">
+            Retry
+        </FluentButton>
+    }
+}
+
+@if (_loading)
+{
+    <br />
+    <FluentSpinner />
 }
 else
 {
@@ -87,6 +94,7 @@ else
     private IEnumerable<AIAgentEditModel> SelectedItems = [];
 
     private bool _loading = true;
+    private bool _loadFailed;
     private string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
@@ -97,6 +105,7 @@ else
     private async Task LoadAgentsAsync()
     {
         _loading = true;
+        _loadFailed = false;
         _errorMessage = null;
 
         try
@@ -106,6 +115,7 @@ else
         }
         catch (Exception ex)
         {
+            _loadFailed = true;
             _errorMessage = $"Unable to load AI agents: {ex.Message}";
         }
         finally

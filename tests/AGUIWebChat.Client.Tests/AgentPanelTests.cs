@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Collections.Concurrent;
 using AGUIWebChat.Client.Components.AI;
 using AGUIWebChat.Contracts.AI.Agents;
+using AGUIWebChat.Contracts.AI;
 using AGUIWebChat.Contracts.AI.Models;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,6 +67,96 @@ public sealed class AgentPanelTests
         Assert.True(harness.Dialog.Result.IsCompletedSuccessfully);
     }
 
+    [Theory]
+    [InlineData("missing-model", "A valid AI model must be selected.")]
+    [InlineData("disabled-model", "The selected AI model is disabled.")]
+    [InlineData("unknown-effort", "The selected reasoning effort is not supported by this model.")]
+    [InlineData("non-effort-model", "The selected reasoning effort is not supported by this model.")]
+    public async Task Save_WhenModelOrEffortIsInvalid_ShouldPreventSaving(string scenario, string message)
+    {
+        var agent = CreateAgent();
+        var model = new AIModelEditModel
+        {
+            Id = 1, IsEnabled = true, ThinkingMode = ThinkingMode.Effort,
+            ReasoningEfforts = [new() { DisplayName = "Low", Value = "low", IsDefault = true }]
+        };
+
+        switch (scenario)
+        {
+            case "missing-model": agent.AIModelId = 99; break;
+            case "disabled-model": model.IsEnabled = false; break;
+            case "unknown-effort": agent.ReasoningEffort = "high"; break;
+            case "non-effort-model": model.ThinkingMode = ThinkingMode.None; agent.ReasoningEffort = "low"; break;
+        }
+
+        var saves = 0;
+
+        await using var harness = new PanelHarness(agent, () => { saves++; return Task.CompletedTask; }, [model]);
+
+        await harness.SaveAsync();
+
+        Assert.False(harness.Dialog.Result.IsCompleted);
+        Assert.Contains(message, harness.Context.GetValidationMessages());
+        Assert.Equal(0, saves);
+    }
+
+    [Fact]
+    public async Task Save_AfterCorrectingAnnotationError_ShouldClearMessagesAndSave()
+    {
+        var agent = CreateAgent();
+
+        agent.Temperature = 3;
+
+        var saves = 0;
+
+        await using var harness = new PanelHarness(agent, () => { saves++; return Task.CompletedTask; });
+
+        await harness.SaveAsync();
+
+        Assert.False(harness.Dialog.Result.IsCompleted);
+        Assert.Equal(0, saves);
+
+        agent.Temperature = null;
+        harness.Context.NotifyFieldChanged(new FieldIdentifier(agent, nameof(agent.Temperature)));
+
+        Assert.Empty(harness.Context.GetValidationMessages());
+
+        await harness.SaveAsync();
+
+        Assert.Equal(1, saves);
+        Assert.True(harness.Dialog.Result.IsCompletedSuccessfully);
+    }
+
+    [Fact]
+    public async Task Save_WithInheritedParameters_ShouldPreserveNullOverrides()
+    {
+        var agent = CreateAgent();
+        var model = new AIModelEditModel
+        {
+            Id = 1, IsEnabled = true, Temperature = 0.7, TopP = 0.9, TopK = 40, NumCtx = 8192,
+            ThinkingMode = ThinkingMode.Effort,
+            ReasoningEfforts = [new() { DisplayName = "Low", Value = "low", IsDefault = true }]
+        };
+        var saves = 0;
+
+        await using var harness = new PanelHarness(agent, () =>
+        {
+            Assert.Null(agent.Temperature);
+            Assert.Null(agent.TopP);
+            Assert.Null(agent.TopK);
+            Assert.Null(agent.NumCtx);
+            Assert.Null(agent.ReasoningEffort);
+            saves++;
+            return Task.CompletedTask;
+        }, [model]);
+
+        await harness.SaveAsync();
+
+        Assert.Empty(harness.Context.GetValidationMessages());
+        Assert.Equal(1, saves);
+        Assert.True(harness.Dialog.Result.IsCompletedSuccessfully);
+    }
+
     private static AIAgentEditModel CreateAgent() => new()
     {
         Name = "Duplicate", SystemPrompt = "Test.", AIModelId = 1
@@ -83,7 +174,7 @@ public sealed class AgentPanelTests
         public EditContext Context { get; }
         public IDialogInstance Dialog => _instance;
 
-        public PanelHarness(AIAgentEditModel agent, Func<Task>? save = null)
+        public PanelHarness(AIAgentEditModel agent, Func<Task>? save = null, IReadOnlyList<AIModelEditModel>? models = null)
         {
             var service = _services.GetRequiredService<IDialogService>();
 
@@ -103,7 +194,7 @@ public sealed class AgentPanelTests
 
 #pragma warning disable BL0005 // Supply component parameters without rendering the Fluent UI controls.
             _panel = new TestPanel { Agent = agent, DialogInstance = _instance, SaveAsync = save, 
-                Models = [new AIModelEditModel { Id = 1, IsEnabled = true }] };
+                Models = models ?? [new AIModelEditModel { Id = 1, IsEnabled = true }] };
 #pragma warning restore BL0005
 
             _panel.Initialize();
