@@ -1,4 +1,5 @@
-﻿@implements IDisposable
+@using AGUIWebChat.Client.Services.AI
+@implements IDisposable
 @using System.ComponentModel.DataAnnotations
 @using AGUIWebChat.Contracts.AI
 @using AGUIWebChat.Contracts.AI.Agents
@@ -114,6 +115,11 @@
     private ValidationMessageStore _validationMessages = default!;
     private bool _validationAttempted;
     private bool _closing;
+    private bool _saving;
+    private ValidationMessageStore _serverMessages = default!;
+
+    [Parameter]
+    public Func<Task>? SaveAsync { get; set; }
 
     private AIModelEditModel? SelectedModel => Models.FirstOrDefault(x => x.Id == Agent.AIModelId);
 
@@ -128,6 +134,7 @@
         }
 
         _editContext = new EditContext(Agent);
+        _serverMessages = new ValidationMessageStore(_editContext);
         _validationMessages = new ValidationMessageStore(_editContext);
         _editContext.OnValidationRequested += ValidateAgent;
         _editContext.OnFieldChanged += FieldChanged;
@@ -143,19 +150,39 @@
 
     private async Task SubmitAsync()
     {
-        if (_closing) return;
+        if (_closing || _saving) return;
 
+        _serverMessages.Clear();
         _validationAttempted = true;
+        if (!_editContext.Validate() || DialogInstance is null) return;
 
-        if (_editContext.Validate() && DialogInstance is not null)
+        _saving = true;
+        try
         {
+            if (SaveAsync is not null) await SaveAsync();
             _closing = true;
             await DialogInstance.CloseAsync();
+        }
+        catch (ApiRequestException ex)
+        {
+            foreach (var message in ex.Errors)
+                _serverMessages.Add(new FieldIdentifier(Agent, string.Empty), message);
+            _editContext.NotifyValidationStateChanged();
+        }
+        catch (Exception ex)
+        {
+            _serverMessages.Add(new FieldIdentifier(Agent, string.Empty), $"Unable to save: {ex.Message}");
+            _editContext.NotifyValidationStateChanged();
+        }
+        finally
+        {
+            _saving = false;
         }
     }
 
     private void FieldChanged(object? sender, FieldChangedEventArgs args)
     {
+        _serverMessages.Clear();
         if (_validationAttempted)
         {
             _editContext.Validate();
@@ -174,21 +201,11 @@
     {
         _validationMessages.Clear();
 
-        if (string.IsNullOrWhiteSpace(Agent.Name))
-        {
-            AddError(nameof(Agent.Name), "Agent name is required.");
-        }
-
-        if (string.IsNullOrWhiteSpace(Agent.SystemPrompt))
-        {
-            AddError(nameof(Agent.SystemPrompt), "System prompt is required.");
-        }
-
-        if (SelectedModel is null)
+        if (Agent.AIModelId > 0 && SelectedModel is null)
         {
             AddError(nameof(Agent.AIModelId), "A valid AI model must be selected.");
         }
-        else
+        else if (SelectedModel is not null)
         {
             if (!SelectedModel.IsEnabled)
             {
@@ -203,16 +220,6 @@
                     AddError(nameof(Agent.ReasoningEffort), "The selected reasoning effort is not supported by this model.");
                 }
             }
-        }
-
-        if (Agent.Temperature is < 0 or > 2)
-        {
-            AddError(nameof(Agent.Temperature), "Temperature must be between 0 and 2.");
-        }
-
-        if (Agent.TopP is < 0 or > 1)
-        {
-            AddError(nameof(Agent.TopP), "TopP must be between 0 and 1.");
         }
 
         _editContext.NotifyValidationStateChanged();

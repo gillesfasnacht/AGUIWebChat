@@ -40,15 +40,20 @@ public sealed class ModelPanelTests
     public async Task Save_AfterCorrectingAnError_ShouldClearMessagesAndCloseDrawer()
     {
         var model = CreateModel();
+
         model.Temperature = 3;
+
         await using var harness = new PanelHarness(model);
+
         await harness.SaveAsync();
 
         model.Temperature = null;
         harness.Context.NotifyFieldChanged(new FieldIdentifier(model, nameof(model.Temperature)));
 
         Assert.Empty(harness.Context.GetValidationMessages());
+
         await harness.SaveAsync();
+
         Assert.True(harness.Dialog.Result.IsCompletedSuccessfully);
     }
 
@@ -56,17 +61,47 @@ public sealed class ModelPanelTests
     public async Task Save_AfterChangingThinkingMode_ShouldIgnoreUnusedEfforts()
     {
         var model = CreateModel();
+
         model.ReasoningEfforts[0].Value = "";
+
         await using var harness = new PanelHarness(model);
+
         await harness.SaveAsync();
+
         Assert.False(harness.Dialog.Result.IsCompleted);
 
         model.ThinkingMode = ThinkingMode.None;
         harness.Context.NotifyFieldChanged(new FieldIdentifier(model, nameof(model.ThinkingMode)));
+
         await harness.SaveAsync();
 
         Assert.Empty(harness.Context.GetValidationMessages());
         Assert.True(harness.Dialog.Result.IsCompletedSuccessfully);
+    }
+
+    [Fact]
+    public async Task Save_WhenApiRejectsModel_ShouldKeepDrawerOpenAndAllowRetry()
+    {
+        var attempts = 0;
+
+        await using var harness = new PanelHarness(CreateModel(), () =>
+        {
+            if (++attempts == 1)
+                throw new AGUIWebChat.Client.Services.AI.ApiRequestException("Duplicate model.",
+                    System.Net.HttpStatusCode.Conflict, ["Duplicate model."]);
+            return Task.CompletedTask;
+        });
+
+        await harness.SaveAsync();
+
+        Assert.False(harness.Dialog.Result.IsCompleted);
+        Assert.Contains("Duplicate model.", harness.Context.GetValidationMessages());
+
+        await harness.SaveAsync();
+
+        Assert.True(harness.Dialog.Result.IsCompletedSuccessfully);
+        Assert.Empty(harness.Context.GetValidationMessages());
+        Assert.Equal(2, attempts);
     }
 
     private static AIModelEditModel CreateModel() => new()
@@ -90,31 +125,39 @@ public sealed class ModelPanelTests
         public EditContext Context { get; }
         public IDialogInstance Dialog => _instance;
 
-        public PanelHarness(AIModelEditModel model)
+        public PanelHarness(AIModelEditModel model, Func<Task>? save = null)
         {
             var service = _services.GetRequiredService<IDialogService>();
+
             _instance = (IDialogInstance)Activator.CreateInstance(typeof(DialogInstance),
                 BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                 binder: null, args: [service, typeof(ModelPanel), new DialogOptions()], culture: null)!;
+
             var dialogs = (ConcurrentDictionary<string, IDialogInstance>)service.GetType().BaseType!
                 .GetField("_list", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(service)!;
+
             dialogs.TryAdd(_instance.Id, _instance);
+
             _body = new FluentDialogBody(_services.GetRequiredService<LibraryConfiguration>());
+
             typeof(FluentDialogBody).GetProperty("Instance", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)!
                 .SetValue(_body, _instance);
+
 #pragma warning disable BL0005 // Supply component parameters without rendering the Fluent UI controls.
-            _panel = new TestPanel { Model = model, DialogInstance = _instance };
+            _panel = new TestPanel { Model = model, DialogInstance = _instance, SaveAsync = save };
 #pragma warning restore BL0005
+
             _panel.Initialize();
+
             Context = (EditContext)typeof(ModelPanel)
                 .GetField("_editContext", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(_panel)!;
+
             // Register the same annotation validation supplied by DataAnnotationsValidator in the form.
             _annotations = Context.EnableDataAnnotationsValidation(_services);
         }
 
         public Task SaveAsync() => (Task)typeof(FluentDialogBody)
-            .GetMethod("ActionClickHandlerAsync", BindingFlags.Instance | BindingFlags.NonPublic,
-                [typeof(DialogOptionsFooterAction)])!
+            .GetMethod("ActionClickHandlerAsync", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(DialogOptionsFooterAction)])!
             .Invoke(_body, [_instance.Options.Footer.PrimaryAction])!;
 
         public async ValueTask DisposeAsync()

@@ -1,4 +1,4 @@
-﻿using AGUIWebChat.Contracts.AI.Models;
+using AGUIWebChat.Contracts.AI.Models;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -21,10 +21,11 @@ namespace AGUIWebChat.Client.Services.AI
 
         public async Task<IReadOnlyList<AIModelEditModel>> GetModelsAsync(bool enabledOnly = false, CancellationToken cancellationToken = default)
         {
-            var models = await _httpClient.GetFromJsonAsync<List<AIModelEditModel>>(
-                $"/api/models?enabledOnly={enabledOnly.ToString().ToLowerInvariant()}",
-                JsonOptions,
-                cancellationToken);
+            using var response = await _httpClient.GetAsync($"/api/models?enabledOnly={enabledOnly.ToString().ToLowerInvariant()}", cancellationToken);
+
+            await ApiResponse.EnsureSuccessAsync(response, cancellationToken);
+
+            var models = await response.Content.ReadFromJsonAsync<List<AIModelEditModel>>(JsonOptions, cancellationToken);
 
             return models ?? [];
         }
@@ -38,7 +39,7 @@ namespace AGUIWebChat.Client.Services.AI
                 return null;
             }
 
-            response.EnsureSuccessStatusCode();
+            await ApiResponse.EnsureSuccessAsync(response, cancellationToken);
 
             return await response.Content.ReadFromJsonAsync<AIModelEditModel>(JsonOptions, cancellationToken);
         }
@@ -47,7 +48,7 @@ namespace AGUIWebChat.Client.Services.AI
         {
             using var response = await _httpClient.PostAsJsonAsync("/api/models", model, JsonOptions, cancellationToken);
 
-            response.EnsureSuccessStatusCode();
+            await ApiResponse.EnsureSuccessAsync(response, cancellationToken);
 
             return await ReadModelAsync(response, cancellationToken);
         }
@@ -56,7 +57,7 @@ namespace AGUIWebChat.Client.Services.AI
         {
             using var response = await _httpClient.PutAsJsonAsync($"/api/models/{model.Id}", model, JsonOptions, cancellationToken);
 
-            response.EnsureSuccessStatusCode();
+            await ApiResponse.EnsureSuccessAsync(response, cancellationToken);
 
             return await ReadModelAsync(response, cancellationToken);
         }
@@ -65,7 +66,7 @@ namespace AGUIWebChat.Client.Services.AI
         {
             using var response = await _httpClient.DeleteAsync($"/api/models/{id}", cancellationToken);
 
-            response.EnsureSuccessStatusCode();
+            await ApiResponse.EnsureSuccessAsync(response, cancellationToken);
         }
 
         private static async Task<AIModelEditModel> ReadModelAsync(HttpResponseMessage response, CancellationToken cancellationToken)

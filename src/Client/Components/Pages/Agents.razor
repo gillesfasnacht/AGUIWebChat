@@ -1,4 +1,4 @@
-﻿@page "/agents"
+@page "/agents"
 
 @using AGUIWebChat.Contracts.AI.Agents
 @using AGUIWebChat.Client.Services.AI
@@ -29,55 +29,43 @@ else if (_errorMessage is not null)
 }
 else
 {
-    <FluentStack Padding="@Padding.Vertical3"
-                 HorizontalAlignment="HorizontalAlignment.Left">
-
+    <FluentStack Padding="@Padding.Vertical3" HorizontalAlignment="HorizontalAlignment.Left">
         <FluentButton Appearance="ButtonAppearance.Primary"
                       IconStart="@(new Icons.Regular.Size20.Add())"
                       OnClick="AddAgentAsync">
             Add
         </FluentButton>
-
         <FluentButton IconStart="@(new Icons.Regular.Size20.Edit())"
                       OnClick="@(() => EditAgentAsync(SelectedItems.First()))"
                       Margin="@Margin.Horizontal2"
                       Disabled="@(SelectedItems.Count() != 1)">
             Edit
         </FluentButton>
-
         <FluentButton IconStart="@(new Icons.Regular.Size20.Delete())"
                       OnClick="@(() => DeleteAgentAsync(SelectedItems.First()))"
                       Margin="@Margin.Horizontal2"
                       Disabled="@(SelectedItems.Count() == 0)">
             Delete
         </FluentButton>
-
     </FluentStack>
-
     <FluentDataGrid TGridItem="AIAgentEditModel"
                     Items="@_agents.AsQueryable()"
                     ShowHover="true"
                     ReorderableColumns="true"
                     HeaderCellAsButtonWithMenu="true"
                     ResizableColumns="true">
-
         <SelectColumn TGridItem="AIAgentEditModel"
                       SelectMode="@DataGridSelectMode.Single"
                       SelectFromEntireRow="true"
                       @bind-SelectedItems="@SelectedItems" />
-
         <PropertyColumn Property="@(x => x.Name)"
                         Title="Agent" />
-
         <PropertyColumn Property="@(x => x.Description)"
                         Title="Description" />
-
         <PropertyColumn Property="@(x => x.AIModelDisplayName)"
                         Title="Model" />
-
         <PropertyColumn Property="@(x => x.ReasoningEffort)"
                         Title="Reasoning" />
-
         <TemplateColumn Title="Enabled">
             <ChildContent>
                 @if (context.IsEnabled)
@@ -133,10 +121,7 @@ else
         try
         {
             var models = await ModelApiClient.GetModelsAsync();
-
-            var availableModels = models
-                .Where(x => x.IsEnabled)
-                .ToList();
+            var availableModels = models.Where(x => x.IsEnabled).ToList();
 
             if (availableModels.Count == 0)
             {
@@ -154,18 +139,19 @@ else
             {
                 options.Modal = true;
                 options.Alignment = DialogAlignment.End;
-
                 options.Parameters.Add(nameof(AgentPanel.Agent), newAgent);
+                options.Parameters.Add(nameof(AgentPanel.SaveAsync), (Func<Task>)(async () =>
+                {
+                    await AgentApiClient.CreateAsync(newAgent);
+                }));
                 options.Parameters.Add(nameof(AgentPanel.IsNew), true);
                 options.Parameters.Add(nameof(AgentPanel.Models), availableModels);
-
                 options.Footer.PrimaryAction.Label = "Add";
                 options.Footer.SecondaryAction.Label = "Cancel";
             });
 
             if (result.Cancelled) return;
 
-            await AgentApiClient.CreateAsync(newAgent);
             await LoadAgentsAsync();
         }
         catch (Exception ex)
@@ -180,36 +166,33 @@ else
 
         try
         {
-            var currentAgent =
-                await AgentApiClient.GetAgentAsync(agent.Id);
+            var currentAgent = await AgentApiClient.GetAgentAsync(agent.Id);
 
             if (currentAgent is null)
             {
                 _errorMessage = $"The agent {agent.Name} no longer exists.";
+
                 return;
             }
 
             var models = await ModelApiClient.GetModelsAsync();
-
-            var availableModels = models
-                .Where(x => x.IsEnabled || x.Id == currentAgent.AIModelId)
-                .ToList();
-
+            var availableModels = models.Where(x => x.IsEnabled || x.Id == currentAgent.AIModelId).ToList();
             var result = await DialogService.ShowDrawerAsync<AgentPanel>(options =>
             {
                 options.Modal = true;
                 options.Alignment = DialogAlignment.End;
-
                 options.Parameters.Add(nameof(AgentPanel.Agent), currentAgent);
+                options.Parameters.Add(nameof(AgentPanel.SaveAsync), (Func<Task>)(async () =>
+                {
+                    await AgentApiClient.UpdateAsync(currentAgent);
+                }));
                 options.Parameters.Add(nameof(AgentPanel.Models), availableModels);
-
                 options.Footer.PrimaryAction.Label = "Save";
                 options.Footer.SecondaryAction.Label = "Cancel";
             });
 
             if (result.Cancelled) return;
 
-            await AgentApiClient.UpdateAsync(currentAgent);
             await LoadAgentsAsync();
         }
         catch (Exception ex)

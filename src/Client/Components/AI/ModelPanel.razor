@@ -1,3 +1,4 @@
+@using AGUIWebChat.Client.Services.AI
 @implements IDisposable
 @using System.ComponentModel.DataAnnotations
 @using AGUIWebChat.Contracts.AI
@@ -192,6 +193,11 @@
     private ValidationMessageStore _reasoningMessages = default!;
     private bool _validationAttempted;
     private bool _closing;
+    private bool _saving;
+    private ValidationMessageStore _serverMessages = default!;
+
+    [Parameter]
+    public Func<Task>? SaveAsync { get; set; }
 
     private readonly IEnumerable<ThinkingMode> _thinkingModes = Enum.GetValues<ThinkingMode>();
 
@@ -206,6 +212,7 @@
         }
 
         _editContext = new EditContext(Model);
+        _serverMessages = new ValidationMessageStore(_editContext);
         _reasoningMessages = new ValidationMessageStore(_editContext);
         _editContext.OnValidationRequested += ValidateReasoning;
         _editContext.OnFieldChanged += FieldChanged;
@@ -221,19 +228,39 @@
 
     private async Task SubmitAsync()
     {
-        if (_closing) return;
+        if (_closing || _saving) return;
 
+        _serverMessages.Clear();
         _validationAttempted = true;
+        if (!_editContext.Validate() || DialogInstance is null) return;
 
-        if (_editContext.Validate() && DialogInstance is not null)
+        _saving = true;
+        try
         {
+            if (SaveAsync is not null) await SaveAsync();
             _closing = true;
             await DialogInstance.CloseAsync();
+        }
+        catch (ApiRequestException ex)
+        {
+            foreach (var message in ex.Errors)
+                _serverMessages.Add(new FieldIdentifier(Model, string.Empty), message);
+            _editContext.NotifyValidationStateChanged();
+        }
+        catch (Exception ex)
+        {
+            _serverMessages.Add(new FieldIdentifier(Model, string.Empty), $"Unable to save: {ex.Message}");
+            _editContext.NotifyValidationStateChanged();
+        }
+        finally
+        {
+            _saving = false;
         }
     }
 
     private void FieldChanged(object? sender, FieldChangedEventArgs args)
     {
+        _serverMessages.Clear();
         if (_validationAttempted)
         {
             _editContext.Validate();

@@ -1,4 +1,5 @@
-﻿using AGUIWebChat.Contracts.AI.Agents;
+using System.Net;
+using AGUIWebChat.Contracts.AI.Agents;
 
 namespace AGUIWebChat.Client.Services.AI
 {
@@ -13,21 +14,31 @@ namespace AGUIWebChat.Client.Services.AI
 
         public async Task<IReadOnlyList<AIAgentEditModel>> GetAgentsAsync(CancellationToken cancellationToken = default)
         {
-            var agents = await _httpClient.GetFromJsonAsync<List<AIAgentEditModel>>("/api/agents", cancellationToken);
+            using var response = await _httpClient.GetAsync("/api/agents", cancellationToken);
+
+            await ApiResponse.EnsureSuccessAsync(response, cancellationToken);
+
+            var agents = await response.Content.ReadFromJsonAsync<List<AIAgentEditModel>>(cancellationToken);
 
             return agents ?? [];
         }
 
         public async Task<AIAgentEditModel?> GetAgentAsync(int id, CancellationToken cancellationToken = default)
         {
-            return await _httpClient.GetFromJsonAsync<AIAgentEditModel>($"/api/agents/{id}", cancellationToken);
+            using var response = await _httpClient.GetAsync($"/api/agents/{id}", cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.NotFound) return null;
+
+            await ApiResponse.EnsureSuccessAsync(response, cancellationToken);
+
+            return await response.Content.ReadFromJsonAsync<AIAgentEditModel>(cancellationToken);
         }
 
         public async Task<AIAgentEditModel> CreateAsync(AIAgentEditModel agent, CancellationToken cancellationToken = default)
         {
             using var response = await _httpClient.PostAsJsonAsync("/api/agents", agent, cancellationToken);
 
-            response.EnsureSuccessStatusCode();
+            await ApiResponse.EnsureSuccessAsync(response, cancellationToken);
 
             return await response.Content.ReadFromJsonAsync<AIAgentEditModel>(cancellationToken)
                    ?? throw new InvalidOperationException("The server returned an empty agent.");
@@ -37,7 +48,7 @@ namespace AGUIWebChat.Client.Services.AI
         {
             using var response = await _httpClient.PutAsJsonAsync($"/api/agents/{agent.Id}", agent, cancellationToken);
 
-            response.EnsureSuccessStatusCode();
+            await ApiResponse.EnsureSuccessAsync(response, cancellationToken);
 
             return await response.Content.ReadFromJsonAsync<AIAgentEditModel>(cancellationToken) 
                 ?? throw new InvalidOperationException("The server returned an empty agent.");
@@ -47,7 +58,7 @@ namespace AGUIWebChat.Client.Services.AI
         {
             using var response = await _httpClient.DeleteAsync($"/api/agents/{id}", cancellationToken);
 
-            response.EnsureSuccessStatusCode();
+            await ApiResponse.EnsureSuccessAsync(response, cancellationToken);
         }
     }
 }
