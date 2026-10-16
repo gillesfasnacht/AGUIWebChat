@@ -10,12 +10,9 @@
 @inject IDialogService DialogService
 
 <PageTitle>Agents</PageTitle>
-
 <h1>Agents</h1>
 <p>Manage the AI agents and their model configurations.</p>
-
 <FluentDivider />
-
 @if (_errorMessage is not null)
 {
     <FluentMessageBar Intent="MessageBarIntent.Error">
@@ -28,7 +25,6 @@
         </FluentButton>
     }
 }
-
 @if (_loading)
 {
     <br />
@@ -85,7 +81,6 @@ else
                 }
             </ChildContent>
         </TemplateColumn>
-
     </FluentDataGrid>
 }
 

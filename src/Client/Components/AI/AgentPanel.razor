@@ -1,6 +1,6 @@
-@using AGUIWebChat.Client.Services.AI
 @implements IDisposable
-@using System.ComponentModel.DataAnnotations
+
+@using AGUIWebChat.Client.Services.AI
 @using AGUIWebChat.Contracts.AI
 @using AGUIWebChat.Contracts.AI.Agents
 @using AGUIWebChat.Contracts.AI.Models
@@ -36,61 +36,59 @@
                           OptionValue="@(model => model.Id)"
                           @bind-Value="Agent.AIModelId"
                           @bind-Value:after="ModelChanged" />
-            <FluentAccordion>
-                <FluentAccordionItem Header="Advanced configuration">
-                    
-                    @* Reasoning *@
-                    <h4 class="brand-text">Reasoning</h4>
-                    @if (SelectedModel?.ThinkingMode == ThinkingMode.Effort)
-                    {
-                        <FluentSelect TOption="ReasoningEffortEditModel"
-                                      TValue="string"
-                                      Label="Reasoning effort"
-                                      Items="@EffortOptions"
-                                      OptionText="@(effort => effort.DisplayName)"
-                                      OptionValue="@(effort => effort.Value)"
-                                      @bind-Value="SelectedEffort"
-                                      @bind-Value:after="ReasoningEffortChanged" />
-                    }
-                    else if (SelectedModel?.ThinkingMode == ThinkingMode.OnOff)
-                    {
-                        <FluentMessageBar Intent="MessageBarIntent.Info">
-                            Agent-level reasoning configuration is not yet available for this mode.
-                        </FluentMessageBar>
-                    }
-
-                    @* Model parameter overrides *@
-                    <h4 class="brand-text">Model parameter overrides</h4>
-                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
-                        <FluentNumberInput Label="Temperature"
-                                           Step="0.1"
-                                           Style="width:100%;"
-                                           Placeholder="@FormatDefault(SelectedModel?.Temperature)"
-                                           @bind-Value="Agent.Temperature" />
-                        <FluentNumberInput Label="Num Ctx"
-                                           Step="1024"
-                                           Style="width:100%;"
-                                           Placeholder="@FormatDefault(SelectedModel?.NumCtx)"
-                                           @bind-Value="Agent.NumCtx" />
-                    </FluentStack>
-                    <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
-                        <FluentNumberInput Label="Top P"
-                                           Step="0.1"
-                                           Style="width:100%;"
-                                           Placeholder="@FormatDefault(SelectedModel?.TopP)"
-                                           @bind-Value="Agent.TopP" />
-                        <FluentNumberInput Label="Top K"
-                                           Style="width:100%;"
-                                           Placeholder="@FormatDefault(SelectedModel?.TopK)"
-                                           @bind-Value="Agent.TopK" />
-                    </FluentStack>
+            @if (!IsNew)
+            {                  
+                @* Reasoning *@
+                <h4 class="brand-text">Reasoning</h4>
+                @if (SelectedModel?.ThinkingMode == ThinkingMode.Effort)
+                {
+                    <FluentSelect TOption="ReasoningEffortEditModel"
+                                    TValue="string"
+                                    Label="Reasoning effort"
+                                    Items="@EffortOptions"
+                                    OptionText="@(effort => effort.DisplayName)"
+                                    OptionValue="@(effort => effort.Value)"
+                                    @bind-Value="SelectedEffort"
+                                    @bind-Value:after="ReasoningEffortChanged" />
+                }
+                else if (SelectedModel?.ThinkingMode == ThinkingMode.OnOff)
+                {
                     <FluentMessageBar Intent="MessageBarIntent.Info">
-                        Grey values are inherited from the selected model.
-                        Enter a value to override the model default.
-                        Clear the field to restore inheritance.
-                    </FluentMessageBar>                    
-                </FluentAccordionItem>
-            </FluentAccordion>
+                        Agent-level reasoning configuration is not yet available for this mode.
+                    </FluentMessageBar>
+                }
+
+                @* Model parameter overrides *@
+                <h4 class="brand-text">Model parameter overrides</h4>
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
+                    <FluentNumberInput Label="Temperature"
+                                       Step="0.1"
+                                       Style="width:100%;"
+                                       Placeholder="@FormatDefault(SelectedModel?.Temperature)"
+                                       @bind-Value="Agent.Temperature" />
+                    <FluentNumberInput Label="Num Ctx"
+                                       Step="1024"
+                                       Style="width:100%;"
+                                       Placeholder="@FormatDefault(SelectedModel?.NumCtx)"
+                                       @bind-Value="Agent.NumCtx" />
+                </FluentStack>
+                <FluentStack Orientation="Orientation.Horizontal" HorizontalGap="12">
+                    <FluentNumberInput Label="Top P"
+                                       Step="0.1"
+                                       Style="width:100%;"
+                                       Placeholder="@FormatDefault(SelectedModel?.TopP)"
+                                       @bind-Value="Agent.TopP" />
+                    <FluentNumberInput Label="Top K"
+                                       Style="width:100%;"
+                                       Placeholder="@FormatDefault(SelectedModel?.TopK)"
+                                       @bind-Value="Agent.TopK" />
+                </FluentStack>
+                <FluentMessageBar Intent="MessageBarIntent.Info">
+                    Grey values are inherited from the selected model.
+                    Enter a value to override the model default.
+                    Clear the field to restore inheritance.
+                </FluentMessageBar>                    
+            }
             <FluentCheckbox @bind-Value="Agent.IsEnabled">
                 Enabled
             </FluentCheckbox>
@@ -127,7 +125,7 @@
         SelectedModel?.ReasoningEfforts.OrderBy(x => x.SortOrder).ToList() ?? [];
 
     private IReadOnlyList<ReasoningEffortEditModel> EffortOptions =>
-        [new() { DisplayName = "Inherit model default", Value = string.Empty }, .. AvailableEfforts];
+        [new() { DisplayName = "Inherit", Value = string.Empty }, .. AvailableEfforts];
 
     private string SelectedEffort
     {
