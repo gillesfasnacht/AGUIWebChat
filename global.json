@@ -1,11 +1,8 @@
 {
   "sdk": {
-    "version": "10.0.400",
+    "version": "10.0.402",
     "allowPrerelease": false,
-    "rollForward": "major"
-  },
-  "tools": {
-    "dotnet": "10.0.400"
+    "rollForward": "latestPatch"
   },
   "test": {
     "runner": "Microsoft.Testing.Platform"
