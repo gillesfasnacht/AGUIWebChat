@@ -1,10 +1,22 @@
-﻿@rendermode InteractiveServer
-
-<FluentNav Id="main-menu" Width="260px">
-    <FluentNavItem Href="chat" IconRest="@(new Icons.Regular.Size20.Chat())" IconActive="@(new Icons.Filled.Size20.Chat())">Chat</FluentNavItem>
-    <FluentNavItem Href="models" IconRest="@(new Icons.Regular.Size20.BrainCircuit())" IconActive="@(new Icons.Filled.Size20.BrainCircuit())">Models</FluentNavItem>
-    <FluentNavItem Href="agents" IconRest="@(new Icons.Regular.Size20.InprivateAccount())" IconActive="@(new Icons.Filled.Size20.InprivateAccount())">Agents</FluentNavItem>
-</FluentNav>
-
-@code {
-}
+<div class="app-navigation">
+    <FluentAppBar Id="main-menu"
+                  Orientation="Orientation.Vertical"
+                  PopoverShowSearch="false"
+                  aria-label="Main navigation">
+        <FluentAppBarItem Href="chat"
+                          Text="Chat"
+                          Tooltip="Chat"
+                          IconRest="@(new Icons.Regular.Size24.Chat())"
+                          IconActive="@(new Icons.Filled.Size24.Chat())" />
+        <FluentAppBarItem Href="models"
+                          Text="Models"
+                          Tooltip="Manage AI models"
+                          IconRest="@(new Icons.Regular.Size24.BrainCircuit())"
+                          IconActive="@(new Icons.Filled.Size24.BrainCircuit())" />
+        <FluentAppBarItem Href="agents"
+                          Text="Agents"
+                          Tooltip="Manage AI agents"
+                          IconRest="@(new Icons.Regular.Size24.InprivateAccount())"
+                          IconActive="@(new Icons.Filled.Size24.InprivateAccount())" />
+    </FluentAppBar>
+</div>

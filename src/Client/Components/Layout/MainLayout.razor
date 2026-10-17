@@ -1,10 +1,10 @@
-﻿@using AGUIWebChat.Client.Services
+@using AGUIWebChat.Client.Services
 
 @inherits LayoutComponentBase
 @inject IThemeService ThemeService
 @inject ChatSettingsService SettingsService
 
-<FluentLayout>
+<FluentLayout NavigationDeferredLoading="true">
 
     @* Header *@
     <FluentLayoutItem Area="LayoutArea.Header">
@@ -53,7 +53,7 @@
     </FluentLayoutItem>
 
     @* Navigation *@
-    <FluentLayoutItem Area="LayoutArea.Navigation">
+    <FluentLayoutItem Area="LayoutArea.Navigation" Width="80px">
         <NavMenu />
     </FluentLayoutItem>
 
