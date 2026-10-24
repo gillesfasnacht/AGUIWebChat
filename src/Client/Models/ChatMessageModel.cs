@@ -1,4 +1,5 @@
-﻿using AGUIWebChat.Client.Services;
+using AGUIWebChat.Contracts.Chat;
+using AGUIWebChat.Client.Services;
 
 namespace AGUIWebChat.Client.Models
 {
@@ -26,6 +27,8 @@ namespace AGUIWebChat.Client.Models
         public int? ReasoningChunkCount { get; set; }
 
         public int? ReasoningCharacterCount { get; set; }
+
+        public ChatMessageStatus Status { get; set; } = ChatMessageStatus.Completed;
 
         public bool IsStreaming { get; set; }
 

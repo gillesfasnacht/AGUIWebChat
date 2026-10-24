@@ -56,6 +56,9 @@ builder.Services.AddHttpClient<AIAgentApiClient>(client =>
 builder.Services.AddSingleton<IAgUiSseEventLogger, AgUiClientSseEventLogger>();
 builder.Services.AddTransient<AgUiHttpLoggingHandler>();
 builder.Services.AddScoped<ChatSettingsService>();
+builder.Services.AddScoped<ConversationIdentity>();
+builder.Services.AddScoped<ConversationEvents>();
+builder.Services.AddHttpClient<ConversationApiClient>(client => client.BaseAddress = new Uri(serverUrl));
 builder.Services.AddHttpClient<AgUiChatService>(client =>
 {
     client.BaseAddress = new Uri(serverUrl);

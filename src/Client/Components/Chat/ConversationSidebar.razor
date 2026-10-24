@@ -1,0 +1,163 @@
+@implements IDisposable
+
+@using AGUIWebChat.Contracts.Chat
+@using AGUIWebChat.Client.Services
+
+@inject ConversationApiClient Api
+@inject ConversationEvents Events
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+
+<nav class="conversation-sidebar" aria-label="Conversations">
+    <div class="sidebar-header">
+        <FluentButton OnClick="NewConversationAsync" IconStart="@(new Icons.Regular.Size20.Add())">
+            New conversation
+        </FluentButton>
+    </div>
+    @if (_error is not null)
+    {
+        <FluentMessageBar Intent="MessageBarIntent.Error">@_error</FluentMessageBar>
+        <FluentButton OnClick="LoadAsync" Disabled="@_loading">Retry</FluentButton>
+    }
+    <div class="conversation-list">
+        @foreach (var conversation in _items)
+        {
+            <div class="conversation-row" @key="conversation.Id">
+                <NavLink href="@($"/chat/{conversation.Id}")" class="conversation-link" Match="NavLinkMatch.All"
+                         title="@conversation.Title" @onclick="NavigatedAsync">
+                    @conversation.Title
+                </NavLink>
+                <FluentButton Appearance="ButtonAppearance.Transparent" Title="@($"Rename {conversation.Title}")"
+                              IconStart="@(new Icons.Regular.Size16.Edit())"
+                              OnClick="@(() => BeginRename(conversation))" Disabled="@_busy" />
+                <FluentButton Appearance="ButtonAppearance.Transparent" Title="@($"Delete {conversation.Title}")"
+                              IconStart="@(new Icons.Regular.Size16.Delete())"
+                              OnClick="@(() => DeleteAsync(conversation))"
+                              Disabled="@(_busy || (IsSending && ActiveId == conversation.Id))" />
+                @if (_renamingId == conversation.Id)
+                {
+                    <div class="rename-conversation">
+                        <FluentTextInput Label="Conversation title" @bind-Value="_title" />
+                        <FluentButton OnClick="RenameAsync" Disabled="@_busy">Save</FluentButton>
+                        <FluentButton OnClick="@(() => _renamingId = null)" Disabled="@_busy">Cancel</FluentButton>
+                    </div>
+                }
+            </div>
+        }
+        @if (_items.Count == 0 && !_loading && _error is null)
+        {
+            <p>No conversations yet.</p>
+        }
+        @if (_loading)
+        {
+            <FluentSpinner />
+        }
+        @if (_hasMore)
+        {
+            <FluentButton OnClick="LoadMoreAsync" Disabled="@_loading">Load more</FluentButton>
+        }
+    </div>
+</nav>
+
+@code {
+    [Parameter] public Guid? ActiveId { get; set; }
+    [Parameter] public bool IsSending { get; set; }
+    [Parameter] public EventCallback OnNavigate { get; set; }
+    private List<ConversationDto> _items = [];
+    private bool _loading, _busy, _hasMore, _disposed, _refreshPending;
+    private string? _error;
+    private Guid? _renamingId;
+    private string _title = string.Empty;
+    private readonly CancellationTokenSource _lifetime = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Events.Changed += RefreshAsync;
+        await LoadAsync();
+    }
+
+    private Task RefreshAsync() => _disposed ? Task.CompletedTask : InvokeAsync(async () =>
+    {
+        if (_loading) { _refreshPending = true; return; }
+        await LoadAsync();
+        if (!_disposed) StateHasChanged();
+    });
+    private Task LoadAsync() => LoadPageAsync(false);
+    private Task LoadMoreAsync() => LoadPageAsync(true);
+
+    private async Task LoadPageAsync(bool append)
+    {
+        if (_loading) return;
+        _loading = true;
+        _error = null;
+        try
+        {
+            var page = await Api.ListAsync(append ? _items.Count : 0, _lifetime.Token);
+            _items = (append ? _items.Concat(page) : page).DistinctBy(x => x.Id).ToList();
+            _hasMore = page.Count == 30;
+        }
+        catch (OperationCanceledException) when (_disposed) { }
+        catch (Exception ex) { _error = $"Unable to load conversations: {ex.Message}"; }
+        finally
+        {
+            _loading = false;
+            if (_refreshPending && !_disposed)
+            {
+                _refreshPending = false;
+                await LoadAsync();
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task NewConversationAsync()
+    {
+        Navigation.NavigateTo("/chat");
+        await NavigatedAsync();
+    }
+    private Task NavigatedAsync() => OnNavigate.InvokeAsync();
+
+    private void BeginRename(ConversationDto item)
+    {
+        _renamingId = item.Id;
+        _title = item.Title;
+    }
+    private async Task RenameAsync()
+    {
+        if (_renamingId is not { } id || _busy) return;
+        _busy = true;
+        _error = null;
+        try
+        {
+            await Api.RenameAsync(id, _title, _lifetime.Token);
+            _renamingId = null;
+            await Events.NotifyAsync();
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+    private async Task DeleteAsync(ConversationDto item)
+    {
+        var confirmation = await DialogService.ShowConfirmationAsync(
+            $"Delete conversation '{item.Title}' and all its messages?", "Delete", "Delete conversation", "Cancel");
+        if (confirmation.Cancelled || _busy) return;
+        _busy = true;
+        _error = null;
+        try
+        {
+            await Api.DeleteAsync(item.Id, _lifetime.Token);
+            if (ActiveId == item.Id) await NewConversationAsync();
+            await Events.NotifyAsync();
+        }
+        catch (Exception ex) { _error = ex.Message; }
+        finally { _busy = false; }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        Events.Changed -= RefreshAsync;
+        _lifetime.Cancel();
+        _lifetime.Dispose();
+    }
+}

@@ -1,3 +1,4 @@
+using AGUIWebChat.Server.Services.Chat;
 using AGUI.Abstractions;
 using AGUI.Server;
 using AGUIWebChat.Server.Telemetry;
@@ -21,7 +22,9 @@ internal static class ChatAgentFactory
         string source,
         string modelName,
         InferenceSettings defaultSettings,
-        IHubContext<TelemetryHub> telemetryHub)
+        IHubContext<TelemetryHub> telemetryHub,
+        ConversationRunCoordinator conversationRuns,
+        IHttpContextAccessor httpContextAccessor)
     {
         Log.Debug("SERVER AGENT_CREATION for {AgentName} with ActivitySource {ActivitySource}", name, source);
 
@@ -79,28 +82,32 @@ internal static class ChatAgentFactory
                             if (input.State is { ValueKind: JsonValueKind.Object } state && state.TryGetProperty("telemetryChannel", out var channel) && channel.ValueKind == JsonValueKind.String && Guid.TryParseExact(channel.GetString(), "N", out _)) telemetryChannel = channel.GetString();
                         }
 
-                        var reasoningStream =
-                           ReasoningTelemetry.ObserveAsync(
-                               messages,
-                               session,
-                               effectiveOptions,
-                               innerAgent,
-                               telemetryHub,
-                               telemetryChannel,
-                               runId,
-                               name,
-                               modelName,
-                               effectiveSettings.ThinkingEffort,
-                               cancellationToken);
+                        IAsyncEnumerable<AgentResponseUpdate> Generate(
+                            IReadOnlyList<ChatMessage> history, CancellationToken token)
+                        {
+                            var reasoningStream = ReasoningTelemetry.ObserveAsync(
+                                history, null, effectiveOptions, innerAgent, telemetryHub,
+                                telemetryChannel, runId, name, modelName, effectiveSettings.ThinkingEffort, token);
+                            return LlmTelemetry.ObserveAsync(reasoningStream, telemetryHub,
+                                telemetryChannel, runId, name, modelName, token);
+                        }
 
-                        return LlmTelemetry.ObserveAsync(
-                            reasoningStream,
-                            telemetryHub,
-                               telemetryChannel,
-                            runId,
-                            name,
-                            modelName,
-                            cancellationToken);
+                        if (effectiveOptions is not ChatClientAgentRunOptions { ChatOptions: { } persistentOptions } ||
+                            !persistentOptions.TryGetRunAgentInput(out RunAgentInput? persistentInput) ||
+                            persistentInput.State is not { ValueKind: JsonValueKind.Object } persistentState ||
+                            !persistentState.TryGetProperty("conversationId", out var conversationValue) ||
+                            conversationValue.ValueKind != JsonValueKind.String ||
+                            !conversationValue.TryGetGuid(out var conversationId) ||
+                            !persistentState.TryGetProperty("messageId", out var messageValue) ||
+                            messageValue.ValueKind != JsonValueKind.String ||
+                            !messageValue.TryGetGuid(out var messageId))
+                            throw new ConversationValidationException("A conversationId and messageId are required.");
+
+                        var owner = ConversationAccess.GetOwnerKey(httpContextAccessor.HttpContext?
+                            .Request.Headers[ConversationAccess.Header]);
+                        var prompt = messages.LastOrDefault(x => x.Role == ChatRole.User)?.Text ?? string.Empty;
+                        return conversationRuns.RunAsync(conversationId, owner, messageId, prompt, runId,
+                            modelName, effectiveSettings, Generate, cancellationToken);
                     })
             .Build();
     }

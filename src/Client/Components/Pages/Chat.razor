@@ -1,4 +1,5 @@
 @page "/chat"
+@page "/chat/{ConversationId:guid}"
 
 @inject IDialogService DialogService
 @implements IDisposable
@@ -7,115 +8,234 @@
 @using AGUIWebChat.Client.Components.Chat
 @using AGUIWebChat.Client.Models
 @using AGUIWebChat.Client.Services
+@using AGUIWebChat.Contracts.Chat
 @using ChatRoleModel = AGUIWebChat.Client.Models.ChatRole
 @using Microsoft.Agents.AI
 
-@inject ChatSettingsService SettingsService
 @inject AgUiChatService AgUiChatService
+@inject ChatSettingsService SettingsService
+@inject ConversationApiClient Conversations
+@inject ConversationEvents ConversationEvents
+@inject NavigationManager Navigation
 @inject TelemetryService TelemetryService
 
-<div class="chat-page">
+<PageTitle>@(_conversationTitle ?? "Chat")</PageTitle>
 
-    @* ============================================================
-       Header
-       ============================================================ *@
-    <header>
-        <h1>Chat</h1>
-        <p>Interactive chat interface</p>
-        <FluentDivider />
-        <FluentStack Padding="@Padding.Vertical3" HorizontalAlignment="HorizontalAlignment.Left">
-            <FluentButton Appearance="ButtonAppearance.Primary" Style="width:100px"
-                            IconStart="@(new Icons.Regular.Size20.Settings())"
-                            OnClick="OpenSettingsAsync">
-                Settings
-            </FluentButton>   
-        </FluentStack>
-    </header>
-    
-    @* ============================================================
-       Messages
-       ============================================================ *@
-
-    <main class="chat-content">
-        @foreach (var message in Messages)
-        {
-            <ChatMessage Message="@message"
-                         ReasoningDisplay="@Settings.ReasoningDisplay"
-                         MonitoringDisplay="@Settings.MonitoringDisplay"
-                         MonitoringSettings="@Settings.Monitoring" />
-        }
-    </main>
-
-    @* ============================================================
-       Input
-       ============================================================ *@
-
-    <footer class="chat-input-area">
-        <div class="chat-input-container">
-            <FluentTextArea @bind-Value="InputText"
-                            Placeholder="Ask something..."
-                            Rows="4"
-                            Disabled="@IsSending"
-                            Style="width: 100%;"
-                            Class="chat-input" />
-            <FluentButton Size="ButtonSize.Large"
-                          Appearance="ButtonAppearance.Primary"
-                          IconStart="@(new Icons.Regular.Size20.Send())"
-                          Disabled="@IsSending"
-                          OnClick="SendAsync"
-                          Class="send-button">
-                          @(IsSending ? "Sending..." : "Send")
-            </FluentButton>
-            <FluentButton Id="thinking-effort-menu"
-                          Size="ButtonSize.Large"
-                          Appearance="ButtonAppearance.Outline"
-                          Disabled="@IsSending"
-                          Title="Choose thinking effort"
-                          Style="flex: 0 0 auto; white-space: nowrap;">
-                          @Settings.ThinkingEffort ▾
-            </FluentButton>
-            <FluentMenu Trigger="thinking-effort-menu">
-                <FluentMenuList>
-                    @foreach (var effort in Enum.GetValues<ThinkingEffort>())
-                    {
-                        <FluentMenuItem OnClick="@(async e => await SetThinkingEffortAsync(effort))">
-                            @(Settings.ThinkingEffort == effort ? "✓ " : "")@effort
-                        </FluentMenuItem>
-                    }
-                </FluentMenuList>
-            </FluentMenu>
-
-            @if (IsSending)
-            {
-                <FluentButton OnClick="CancelResponse">Stop</FluentButton>
-            }
-
+<div class="chat-workspace @(_sidebarCollapsed ? "sidebar-collapsed" : "") @(_mobileSidebarOpen ? "mobile-sidebar-open" : "")">
+    <aside id="conversation-sidebar" class="history-panel" aria-label="Conversation history">
+        <div class="mobile-history-close">
+            <FluentButton OnClick="@(() => _mobileSidebarOpen = false)">Close history</FluentButton>
         </div>
-    </footer>
+        <ConversationSidebar ActiveId="@_activeConversationId" IsSending="@IsSending"
+                             OnNavigate="@(() => _mobileSidebarOpen = false)" />
+    </aside>
+    @if (_mobileSidebarOpen)
+    {
+        <button class="history-backdrop" aria-label="Close conversation history"
+                @onclick="@(() => _mobileSidebarOpen = false)"></button>
+    }
+    <div class="chat-page">
+
+        @* ============================================================
+           Header
+           ============================================================ *@
+        <header>
+            <div class="history-controls">
+                <span class="desktop-history-toggle">
+                    <FluentButton Appearance="ButtonAppearance.Transparent"
+                                  OnClick="@(() => _sidebarCollapsed = !_sidebarCollapsed)"
+                                  IconStart="@(_sidebarCollapsed
+                                  ? new Icons.Regular.Size20.PanelLeftExpand()
+                                  : new Icons.Regular.Size20.PanelLeftContract())"
+                                  aria-controls="conversation-sidebar"
+                                  aria-expanded="@(!_sidebarCollapsed)"
+                                  Title="@(_sidebarCollapsed ? "Show conversations" : "Hide conversations")">
+                        @(_sidebarCollapsed ? "Show" : "Hide")
+                    </FluentButton>
+                </span>
+                <span class="mobile-history-toggle">
+                    <FluentButton Appearance="ButtonAppearance.Transparent"
+                                  OnClick="@(() => _mobileSidebarOpen = !_mobileSidebarOpen)"
+                                  IconStart="@(_mobileSidebarOpen
+                                  ? new Icons.Regular.Size20.PanelLeftContract()
+                                  : new Icons.Regular.Size20.PanelLeftExpand())"
+                                  aria-controls="conversation-sidebar"
+                                  aria-expanded="@_mobileSidebarOpen"
+                                  Title="@(_mobileSidebarOpen ? "Hide conversations" : "Show conversations")">
+                        @(_mobileSidebarOpen ? "Hide" : "Show")
+                    </FluentButton>
+                </span>
+            </div>
+            <h1>@(_conversationTitle ?? "Chat")</h1>
+            @if (_loadError is not null)
+            {
+                <FluentMessageBar Intent="MessageBarIntent.Error">@_loadError</FluentMessageBar>
+                <FluentButton OnClick="ReloadAsync">Retry</FluentButton>
+            }
+            @if (_loadingConversation)
+            {
+                <FluentSpinner />
+            }
+            <p>Interactive chat interface</p>
+            <FluentDivider />
+            <FluentStack Padding="@Padding.Vertical3" HorizontalAlignment="HorizontalAlignment.Left">
+                <FluentButton Appearance="ButtonAppearance.Primary" Style="width:100px"
+                              IconStart="@(new Icons.Regular.Size20.Settings())"
+                              OnClick="OpenSettingsAsync">
+                    Settings
+                </FluentButton>   
+            </FluentStack>
+        </header>
+    
+        @* ============================================================
+           Messages
+           ============================================================ *@
+
+        <main class="chat-content">
+            @foreach (var message in Messages)
+            {
+                <ChatMessage Message="@message"
+                             ReasoningDisplay="@Settings.ReasoningDisplay"
+                             MonitoringDisplay="@Settings.MonitoringDisplay"
+                             MonitoringSettings="@Settings.Monitoring" />
+            }
+        </main>
+
+        @* ============================================================
+           Input
+           ============================================================ *@
+
+        <footer class="chat-input-area">
+            <div class="chat-input-container">
+                <FluentTextArea @bind-Value="InputText"
+                                Placeholder="Ask something..."
+                                Rows="4"
+                                Disabled="@(IsSending || _loadingConversation || _loadError is not null)"
+                                Style="width: 100%;"
+                                Class="chat-input" />
+                <FluentButton Size="ButtonSize.Large"
+                              Appearance="ButtonAppearance.Primary"
+                              IconStart="@(new Icons.Regular.Size20.Send())"
+                              Disabled="@(IsSending || _loadingConversation || _loadError is not null)"
+                              OnClick="SendAsync"
+                              Class="send-button">
+                              @(IsSending ? "Sending..." : "Send")
+                </FluentButton>
+                <FluentButton Id="thinking-effort-menu"
+                              Size="ButtonSize.Large"
+                              Appearance="ButtonAppearance.Outline"
+                              Disabled="@(IsSending || _loadingConversation || _loadError is not null)"
+                              Title="Choose thinking effort"
+                              Style="flex: 0 0 auto; white-space: nowrap;">
+                              @Settings.ThinkingEffort ▾
+                </FluentButton>
+                <FluentMenu Trigger="thinking-effort-menu">
+                    <FluentMenuList>
+                        @foreach (var effort in Enum.GetValues<ThinkingEffort>())
+                        {
+                            <FluentMenuItem OnClick="@(async e => await SetThinkingEffortAsync(effort))">
+                                @(Settings.ThinkingEffort == effort ? "✓ " : "")@effort
+                            </FluentMenuItem>
+                        }
+                    </FluentMenuList>
+                </FluentMenu>
+
+                @if (IsSending)
+                {
+                    <FluentButton OnClick="CancelResponse">Stop</FluentButton>
+                }
+
+            </div>
+        </footer>
+    </div>
+
 </div>
 
 @code
 {
+    [Parameter] public Guid? ConversationId { get; set; }
+    private Guid? _activeConversationId;
+    private string? _conversationTitle, _loadError;
+    private bool _loadingConversation, _sidebarCollapsed, _mobileSidebarOpen;
+    private Task? _sendTask;
+    private int _loadVersion;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (_activeConversationId == ConversationId) return;
+        await LoadConversationAsync();
+    }
+
+    private Task ReloadAsync() => LoadConversationAsync();
+
+    private async Task LoadConversationAsync()
+    {
+        var version = ++_loadVersion;
+        var id = ConversationId;
+
+        _loadingConversation = true;
+        _loadError = null;
+        _sendCancellation?.Cancel();
+
+        if (_sendTask is not null) await _sendTask;
+        if (version != _loadVersion || _disposed) return;
+
+        _currentAssistantMessage = null;
+
+        Messages.Clear();
+        InputText = string.Empty;
+
+        _activeConversationId = id;
+        _conversationTitle = null;
+
+        try
+        {
+            if (id is { } conversationId)
+            {
+                var conversation = await Conversations.GetAsync(conversationId);
+                var history = await Conversations.MessagesAsync(conversationId);
+
+                if (version != _loadVersion || _disposed) return;
+
+                _conversationTitle = conversation.Title;
+
+                Messages.AddRange(history.Select(x => new ChatMessageModel
+                {
+                    Id = x.Id.ToString("N"),
+                    Role = x.Role == ChatMessageRole.User ? ChatRoleModel.User : ChatRoleModel.Assistant,
+                    Content = x.Content, Reasoning = x.Reasoning, RunId = x.RunId, Status = x.Status
+                }));
+            }
+        }
+        catch (Exception ex)
+        {
+            if (version == _loadVersion) _loadError = $"Unable to open conversation: {ex.Message}";
+        }
+        finally
+        {
+            if (version == _loadVersion) _loadingConversation = false;
+        }
+    }
+
     private ChatMessageModel? _currentAssistantMessage;
     private string? InputText;
     private bool IsSending;
     private CancellationTokenSource? _sendCancellation;
     private bool _disposed;
-
     private void CancelResponse() => _sendCancellation?.Cancel();
 
     // =============================================================
     // Settings
     // =============================================================
 
-    private ChatSettings Settings =>
-        SettingsService.Settings;
+    private ChatSettings Settings => SettingsService.Settings;
 
     private async Task SetThinkingEffortAsync(ThinkingEffort effort)
     {
         if (IsSending) return;
 
         Settings.ThinkingEffort = effort;
+
         await SettingsService.SaveAsync();
     }
 
@@ -145,10 +265,16 @@
     // Send message
     // =============================================================
 
-    private async Task SendAsync()
+    private Task SendAsync()
     {
-        if (IsSending ||
-            string.IsNullOrWhiteSpace(InputText))
+        if (IsSending) return Task.CompletedTask;
+
+        return _sendTask = SendCoreAsync();
+    }
+
+    private async Task SendCoreAsync()
+    {
+        if (IsSending || _loadingConversation || _loadError is not null || string.IsNullOrWhiteSpace(InputText))
         {
             return;
         }
@@ -158,6 +284,45 @@
         // ---------------------------------------------------------
 
         var userText = InputText.Trim();
+
+        IsSending = true;
+        _sendCancellation = new CancellationTokenSource();
+
+        try
+        {
+            if (_activeConversationId is null)
+            {
+                var conversation = await Conversations.CreateAsync(_sendCancellation.Token);
+
+                _sendCancellation.Token.ThrowIfCancellationRequested();
+                _activeConversationId = conversation.Id;
+                _conversationTitle = conversation.Title;
+
+                Navigation.NavigateTo($"/chat/{conversation.Id}", replace: true);
+
+                await ConversationEvents.NotifyAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            if (!_sendCancellation.IsCancellationRequested)
+                _loadError = $"Unable to create conversation: {ex.Message}";
+
+            IsSending = false;
+            _sendCancellation.Dispose();
+            _sendCancellation = null;
+
+            return;
+        }
+
+        if (_disposed)
+        {
+            IsSending = false;
+            _sendCancellation.Dispose();
+            _sendCancellation = null;
+
+            return;
+        }
 
         InputText = string.Empty;
 
@@ -183,6 +348,7 @@
             Role = ChatRoleModel.Assistant,
             Content = string.Empty,
             IsStreaming = true,
+            Status = ChatMessageStatus.InProgress,
         };
 
         _currentAssistantMessage = assistantMessage;
@@ -193,14 +359,11 @@
         // Start streaming
         // ---------------------------------------------------------
 
-        IsSending = true;
-        _sendCancellation = new CancellationTokenSource();
-
         await InvokeAsync(StateHasChanged);
 
         try
         {
-            await foreach (var update in AgUiChatService.SendAsync(userText, Settings, _sendCancellation.Token))
+            await foreach (var update in AgUiChatService.SendAsync(userText, _activeConversationId!.Value, Guid.Parse(userMessage.Id), Settings, _sendCancellation.Token))
             {
                 var hasChanged = false;
                 var chatUpdate = update.AsChatResponseUpdate();
@@ -233,23 +396,41 @@
                     await InvokeAsync(StateHasChanged);
                 }
             }
+            assistantMessage.Status = ChatMessageStatus.Completed;
         }
         catch (OperationCanceledException) when (_sendCancellation.IsCancellationRequested)
         {
-            assistantMessage.Content += "\n\nResponse stopped.";
+            assistantMessage.Status = ChatMessageStatus.Cancelled;
         }
         catch (Exception ex)
         {
-            assistantMessage.Content += $"\n\nError: {ex.Message}";
+            assistantMessage.Status = ChatMessageStatus.Failed;
+
+            _loadError = $"Unable to generate response: {ex.Message}";
         }
         finally
         {
             assistantMessage.IsStreaming = false;
             IsSending = false;
+
             _sendCancellation.Dispose();
             _sendCancellation = null;
+            _currentAssistantMessage = null;
 
-            if (!_disposed) await InvokeAsync(StateHasChanged);
+            if (!_disposed)
+            {
+                try
+                {
+                    await ConversationEvents.NotifyAsync();
+
+                    var conversation = await Conversations.GetAsync(_activeConversationId!.Value);
+
+                    _conversationTitle = conversation.Title;
+                }
+                catch (Exception ex) { _loadError = $"Unable to refresh conversation: {ex.Message}"; }
+
+                await InvokeAsync(StateHasChanged);
+            }
         }
     }
 
@@ -258,16 +439,38 @@
         AgUiChatService.RunStarted += OnRunStarted;
         TelemetryService.ReasoningCompleted += OnReasoningCompleted;
         TelemetryService.LlmMetricsCompleted += OnLlmMetricsCompleted;
+        ConversationEvents.Changed += RefreshTitleAsync;
 
-        await TelemetryService.StartAsync();
+        try 
+        { 
+            await TelemetryService.StartAsync(); 
+        }
+        catch { /* History and text streaming remain available without live telemetry. */ }
+    }
+
+    private async Task RefreshTitleAsync()
+    {
+        if (_activeConversationId is not { } id || _disposed) return;
+
+        try
+        {
+            var conversation = await Conversations.GetAsync(id);
+
+            if (_activeConversationId == id && !_disposed)
+            {
+                _conversationTitle = conversation.Title;
+
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch { /* Page actions report API errors; a stale title must not block a save. */ }
     }
 
     private async void OnReasoningCompleted(ReasoningTelemetryDto telemetry)
     {
         var message = Messages.FirstOrDefault(m => m.RunId == telemetry.RunId);
 
-        if (message is null)
-            return;
+        if (message is null) return;
 
         message.ReasoningDurationMs = telemetry.DurationMs;
         message.ReasoningChunkCount = telemetry.ChunkCount;
@@ -283,6 +486,7 @@
         if (message is null) return;
 
         message.MonitoringTelemetry = telemetry;
+
         await InvokeAsync(StateHasChanged);
     }
 
@@ -290,6 +494,8 @@
     {
         _disposed = true;
         _sendCancellation?.Cancel();
+
+        ConversationEvents.Changed -= RefreshTitleAsync;
         AgUiChatService.RunStarted -= OnRunStarted;
         TelemetryService.ReasoningCompleted -= OnReasoningCompleted;
         TelemetryService.LlmMetricsCompleted -= OnLlmMetricsCompleted;

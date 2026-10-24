@@ -1,3 +1,4 @@
+using AGUIWebChat.Server.Services.Chat;
 using AGUIWebChat.Server.Services.AI;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,9 @@ public sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) : I
     {
         var (status, title, detail) = exception switch
         {
+            ConversationValidationException => (400, "Invalid conversation", exception.Message),
+            ConversationNotFoundException => (404, "Conversation not found", exception.Message),
+            ConversationConflictException => (409, "Conversation conflict", exception.Message),
             ModelValidationException => (400, "Invalid model", exception.Message),
             ModelNotFoundException => (404, "Model not found", exception.Message),
             ModelConflictException => (409, "Model conflict", exception.Message),
@@ -19,8 +23,8 @@ public sealed class ApiExceptionHandler(ILogger<ApiExceptionHandler> logger) : I
 
         if (status >= 500) logger.LogError(exception, "API request failed: {TraceId}", context.TraceIdentifier);
 
-        ProblemDetails problem = exception is ModelValidationException
-            ? new HttpValidationProblemDetails(new Dictionary<string, string[]> { ["model"] = [detail] })
+        ProblemDetails problem = exception is ModelValidationException or ConversationValidationException
+            ? new HttpValidationProblemDetails(new Dictionary<string, string[]> { [exception is ConversationValidationException ? "conversation" : "model"] = [detail] })
             : new ProblemDetails();
 
         problem.Status = status;

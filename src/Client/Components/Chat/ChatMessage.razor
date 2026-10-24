@@ -1,8 +1,8 @@
-﻿@using AGUIWebChat.Client.Models;
+@using AGUIWebChat.Contracts.Chat
+@using AGUIWebChat.Client.Models;
 @using Markdig
 @using Markdown.ColorCode
 @using Microsoft.AspNetCore.Components
-
 
 <div class="message @RoleClass">
 
@@ -37,6 +37,17 @@
         </div>
     }
 
+    @if (!Message.IsStreaming && Message.Status != ChatMessageStatus.Completed)
+    {
+        <div role="status">
+            @(Message.Status switch
+            {
+                ChatMessageStatus.Cancelled => "Response stopped.",
+                ChatMessageStatus.Failed => "Response failed. You can send another message to retry.",
+                _ => "Response incomplete. Refresh to check its status."
+            })
+        </div>
+    }
 </div>
 
 @code {

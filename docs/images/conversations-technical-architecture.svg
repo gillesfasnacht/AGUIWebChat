@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="2400" height="1550" viewBox="0 0 2400 1550">
+  <title>conversations-technical-architecture.svg</title>
+  <g id="Layer_1" data-name="Layer 1">
+    <path d="M0 1 L2400 1 L2400 1551 L0 1551 Z" fill="#f4f7fc"/>
+    <text transform="matrix(1 0 0 1 60 68)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="48" font-weight="600" fill="#16314f"><tspan x="0" y="0">AGUI WebChat</tspan></text>
+    <text transform="matrix(1 0 0 1 60 125)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="35" font-weight="600" fill="#16314f"><tspan x="0" y="0">Architecture technique • conversations persistantes</tspan></text>
+    <text transform="matrix(1 0 0 1 60 181)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="25" fill="#27374d"><tspan x="0" y="0">Implémentation actuelle : Blazor Server, ASP.NET Core, AG-UI, EF Core et SQL Server</tspan></text>
+    <path d="M60 211 L102 211" fill="#000000" stroke="#2875cb" stroke-width="5"/>
+    <text transform="matrix(1 0 0 1 116 219)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#27374d"><tspan x="0" y="0">REST / SSE</tspan></text>
+    <path d="M310 211 L352 211" fill="#000000" stroke="#158271" stroke-width="5"/>
+    <text transform="matrix(1 0 0 1 366 219)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#27374d"><tspan x="0" y="0">Persistance</tspan></text>
+    <path d="M590 211 L632 211" fill="#000000" stroke="#b87516" stroke-width="5"/>
+    <text transform="matrix(1 0 0 1 646 219)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#27374d"><tspan x="0" y="0">Inférence IA</tspan></text>
+    <path d="M880 211 L922 211" fill="#000000" stroke="#7e56b3" stroke-width="5"/>
+    <text transform="matrix(1 0 0 1 936 219)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#27374d"><tspan x="0" y="0">Télémétrie</tspan></text>
+    <path d="M82 254 L688 254 C700.15 254 710 263.85 710 276 L710 1202 C710 1214.15 700.15 1224 688 1224 L82 1224 C69.85 1224 60 1214.15 60 1202 L60 276 C60 263.85 69.85 254 82 254 Z" fill="#eaf0f8" stroke="#0071bc" stroke-width="2"/>
+    <text transform="matrix(1 0 0 1 84 289)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="30" font-weight="600" fill="#16314f"><tspan x="0" y="0">AGUIWebChat.Client</tspan></text>
+    <text transform="matrix(1 0 0 1 84 330)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#27374d"><tspan x="0" y="0">Blazor Interactive Server</tspan></text>
+    <path d="M872 254 L1608 254 C1620.15 254 1630 263.85 1630 276 L1630 1202 C1630 1214.15 1620.15 1224 1608 1224 L872 1224 C859.85 1224 850 1214.15 850 1202 L850 276 C850 263.85 859.85 254 872 254 Z" fill="#eaf0f8" stroke="#0071bc" stroke-width="2"/>
+    <text transform="matrix(1 0 0 1 874 297)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="30" font-weight="600" fill="#16314f"><tspan x="0" y="0">AGUIWebChat.Server</tspan></text>
+    <text transform="matrix(1 0 0 1 874 338)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#27374d"><tspan x="0" y="0">Backend ASP.NET Core</tspan></text>
+    <path d="M1782 254 L2318 254 C2330.15 254 2340 263.85 2340 276 L2340 1202 C2340 1214.15 2330.15 1224 2318 1224 L1782 1224 C1769.85 1224 1760 1214.15 1760 1202 L1760 276 C1760 263.85 1769.85 254 1782 254 Z" fill="#eaf0f8" stroke="#0071bc" stroke-width="2"/>
+    <text transform="matrix(1 0 0 1 1784 289)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="30" font-weight="600" fill="#16314f"><tspan x="0" y="0">Infrastructure</tspan></text>
+    <text transform="matrix(1 0 0 1 1784 330)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#27374d"><tspan x="0" y="0">Stockage et moteur IA</tspan></text>
+    <path d="M108 366 L662 366 C671.941 366 680 374.059 680 384 L680 513 C680 522.941 671.941 531 662 531 L108 531 C98.059 531 90 522.941 90 513 L90 384 C90 374.059 98.059 366 108 366 Z" fill="#ffffff" stroke="#0071bc" stroke-width="2"/>
+    <path d="M93 384 L94 384 C95.105 384 96 384.895 96 386 L96 511 C96 512.105 95.105 513 94 513 L93 513 C91.895 513 91 512.105 91 511 L91 386 C91 384.895 91.895 384 93 384 Z" fill="#2875cb" stroke="#2875cb"/>
+    <text transform="matrix(1 0 0 1 114 399)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#2875cb"><tspan x="0" y="0">Interface et navigation</tspan></text>
+    <text transform="matrix(1 0 0 1 114 447)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">AppBar | ConversationSidebar.razor</tspan></text>
+    <text transform="matrix(1 0 0 1 114 481)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">Chat.razor : /chat et /chat/{id}</tspan></text>
+    <text transform="matrix(1 0 0 1 114 515)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">Liste, renommage, suppression et reprise</tspan></text>
+    <path d="M108 555 L662 555 C671.941 555 680 563.059 680 573 L680 652 C680 661.941 671.941 670 662 670 L108 670 C98.059 670 90 661.941 90 652 L90 573 C90 563.059 98.059 555 108 555 Z" fill="#ffffff" stroke="#0071bc" stroke-width="2"/>
+    <path d="M93 573 L94 573 C95.105 573 96 573.895 96 575 L96 650 C96 651.105 95.105 652 94 652 L93 652 C91.895 652 91 651.105 91 650 L91 575 C91 573.895 91.895 573 93 573 Z" fill="#2875cb" stroke="#2875cb"/>
+    <text transform="matrix(1 0 0 1 114 594)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#2875cb"><tspan x="0" y="0">ConversationIdentity</tspan></text>
+    <text transform="matrix(1 0 0 1 114 642)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="22" fill="#526277"><tspan x="0" y="0">Clé anonyme dans le localStorage du navigateur</tspan></text>
+    <text transform="matrix(1 0 0 1 100 703)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="21" fill="#526277"><tspan x="0" y="0">Services .NET exécutés côté serveur Blazor</tspan></text>
+    <path d="M108 720 L662 720 C671.941 720 680 728.059 680 738 L680 817 C680 826.941 671.941 835 662 835 L108 835 C98.059 835 90 826.941 90 817 L90 738 C90 728.059 98.059 720 108 720 Z" fill="#ffffff" stroke="#0071bc" stroke-width="2"/>
+    <path d="M93 738 L94 738 C95.105 738 96 738.895 96 740 L96 815 C96 816.105 95.105 817 94 817 L93 817 C91.895 817 91 816.105 91 815 L91 740 C91 738.895 91.895 738 93 738 Z" fill="#2875cb" stroke="#2875cb"/>
+    <text transform="matrix(1 0 0 1 114 759)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#2875cb"><tspan x="0" y="0">ConversationApiClient</tspan></text>
+    <text transform="matrix(1 0 0 1 114 807)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">Créer, lister, lire, renommer, supprimer</tspan></text>
+    <path d="M108 908 L662 908 C671.941 908 680 916.059 680 926 L680 1020 C680 1029.941 671.941 1038 662 1038 L108 1038 C98.059 1038 90 1029.941 90 1020 L90 926 C90 916.059 98.059 908 108 908 Z" fill="#ffffff" stroke="#0071bc" stroke-width="2"/>
+    <path d="M93 926 L94 926 C95.105 926 96 926.895 96 928 L96 1018 C96 1019.105 95.105 1020 94 1020 L93 1020 C91.895 1020 91 1019.105 91 1018 L91 928 C91 926.895 91.895 926 93 926 Z" fill="#2875cb" stroke="#2875cb"/>
+    <text transform="matrix(1 0 0 1 114 939)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#2875cb"><tspan x="0" y="0">AgUiChatService</tspan></text>
+    <text transform="matrix(1 0 0 1 114 987)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">conversationId + messageId + paramètres</tspan></text>
+    <text transform="matrix(1 0 0 1 114 1021)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">Nouvelle session AG-UI à chaque envoi</tspan></text>
+    <path d="M108 1095 L662 1095 C671.941 1095 680 1103.059 680 1113 L680 1177 C680 1186.941 671.941 1195 662 1195 L108 1195 C98.059 1195 90 1186.941 90 1177 L90 1113 C90 1103.059 98.059 1095 108 1095 Z" fill="#ffffff" stroke="#93278f" stroke-width="2"/>
+    <path d="M93 1113 L94 1113 C95.105 1113 96 1113.895 96 1115 L96 1175 C96 1176.105 95.105 1177 94 1177 L93 1177 C91.895 1177 91 1176.105 91 1175 L91 1115 C91 1113.895 91.895 1113 93 1113 Z" fill="#7e56b3" stroke="#7e56b3"/>
+    <text transform="matrix(1 0 0 1 114 1129)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#7e56b3"><tspan x="0" y="0">TelemetryService</tspan></text>
+    <text transform="matrix(1 0 0 1 114 1177)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#526277"><tspan x="0" y="0">Affichage des métriques en temps réel</tspan></text>
+    <path d="M898 365 L1562 365 C1571.941 365 1580 373.059 1580 383 L1580 517 C1580 526.941 1571.941 535 1562 535 L898 535 C888.059 535 880 526.941 880 517 L880 383 C880 373.059 888.059 365 898 365 Z" fill="#ffffff" stroke="#0071bc" stroke-width="2"/>
+    <path d="M883 384 L884 384 C885.105 384 886 384.895 886 386 L886 516 C886 517.105 885.105 518 884 518 L883 518 C881.895 518 881 517.105 881 516 L881 386 C881 384.895 881.895 384 883 384 Z" fill="#2875cb" stroke="#2875cb"/>
+    <text transform="matrix(1 0 0 1 904 399)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#2875cb"><tspan x="0" y="0">ConversationEndpoints</tspan></text>
+    <text transform="matrix(1 0 0 1 904 447)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">/api/conversations → ConversationService</tspan></text>
+    <text transform="matrix(1 0 0 1 904 481)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">Pagination, titres et contrôle d&apos;accès par clé</tspan></text>
+    <text transform="matrix(1 0 0 1 904 515)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">Validation et réponses ProblemDetails</tspan></text>
+    <path d="M898 624 L1562 624 C1571.941 624 1580 632.059 1580 642 L1580 721 C1580 730.941 1571.941 739 1562 739 L898 739 C888.059 739 880 730.941 880 721 L880 642 C880 632.059 888.059 624 898 624 Z" fill="#ffffff" stroke="#0071bc" stroke-width="2"/>
+    <path d="M883 642 L884 642 C885.105 642 886 642.895 886 644 L886 719 C886 720.105 885.105 721 884 721 L883 721 C881.895 721 881 720.105 881 719 L881 644 C881 642.895 881.895 642 883 642 Z" fill="#2875cb" stroke="#2875cb"/>
+    <text transform="matrix(1 0 0 1 904 659)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#2875cb"><tspan x="0" y="0">/ag-ui → ChatAgentFactory</tspan></text>
+    <text transform="matrix(1 0 0 1 904 707)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#526277"><tspan x="0" y="0">EnterpriseSupportAgent : réglages d&apos;inférence</tspan></text>
+    <path d="M898 804 L1562 804 C1571.941 804 1580 812.059 1580 822 L1580 1001 C1580 1010.941 1571.941 1019 1562 1019 L898 1019 C888.059 1019 880 1010.941 880 1001 L880 822 C880 812.059 888.059 804 898 804 Z" fill="#ffffff" stroke="#006837" stroke-width="2"/>
+    <path d="M883 822 L884 822 C885.105 822 886 822.895 886 824 L886 999 C886 1000.105 885.105 1001 884 1001 L883 1001 C881.895 1001 881 1000.105 881 999 L881 824 C881 822.895 881.895 822 883 822 Z" fill="#158271" stroke="#158271"/>
+    <text transform="matrix(1 0 0 1 904 839)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#158271"><tspan x="0" y="0">ConversationRunCoordinator</tspan></text>
+    <text transform="matrix(1 0 0 1 904 887)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">Recharge l&apos;historique depuis la base</tspan></text>
+    <text transform="matrix(1 0 0 1 904 921)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">Enregistre la question avant l&apos;inférence</tspan></text>
+    <text transform="matrix(1 0 0 1 904 955)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">Sauvegarde progressive et statut final</tspan></text>
+    <text transform="matrix(1 0 0 1 904 989)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="24" fill="#526277"><tspan x="0" y="0">Verrou renouvelé : une génération par conversation</tspan></text>
+    <path d="M898 1096 L1562 1096 C1571.941 1096 1580 1104.059 1580 1114 L1580 1178 C1580 1187.941 1571.941 1196 1562 1196 L898 1196 C888.059 1196 880 1187.941 880 1178 L880 1114 C880 1104.059 888.059 1096 898 1096 Z" fill="#ffffff" stroke="#93278f" stroke-width="2"/>
+    <path d="M883 1114 L884 1114 C885.105 1114 886 1114.895 886 1116 L886 1176 C886 1177.105 885.105 1178 884 1178 L883 1178 C881.895 1178 881 1177.105 881 1176 L881 1116 C881 1114.895 881.895 1114 883 1114 Z" fill="#7e56b3" stroke="#7e56b3"/>
+    <text transform="matrix(1 0 0 1 904 1129)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#7e56b3"><tspan x="0" y="0">Télémétrie → TelemetryHub</tspan></text>
+    <text transform="matrix(1 0 0 1 904 1177)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#526277"><tspan x="0" y="0">ReasoningTelemetry / LlmTelemetry • /telemetry</tspan></text>
+    <path d="M1808 365 L2292 365 C2301.941 365 2310 373.059 2310 383 L2310 532 C2310 541.941 2301.941 550 2292 550 L1808 550 C1798.059 550 1790 541.941 1790 532 L1790 383 C1790 373.059 1798.059 365 1808 365 Z" fill="#ffffff" stroke="#006837" stroke-width="2"/>
+    <path d="M1793 383 L1794 383 C1795.105 383 1796 383.895 1796 385 L1796 530 C1796 531.105 1795.105 532 1794 532 L1793 532 C1791.895 532 1791 531.105 1791 530 L1791 385 C1791 383.895 1791.895 383 1793 383 Z" fill="#158271" stroke="#158271"/>
+    <text transform="matrix(1 0 0 1 1814 399)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#158271"><tspan x="0" y="0">SQL Server</tspan></text>
+    <text transform="matrix(1 0 0 1 1814 447)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#526277"><tspan x="0" y="0">ChatConversations</tspan></text>
+    <text transform="matrix(1 0 0 1 1814 481)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#526277"><tspan x="0" y="0">ChatMessages : contenu, raisonnement,</tspan></text>
+    <text transform="matrix(1 0 0 1 1814 515)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#526277"><tspan x="0" y="0">ordre, statut, RunId et réglages IA</tspan></text>
+    <path d="M1808 627.706 L2292 627.706 C2301.941 627.706 2310 636.697 2310 647.787 L2310 735.919 C2310 747.009 2301.941 756 2292 756 L1808 756 C1798.059 756 1790 747.009 1790 735.919 L1790 647.787 C1790 636.697 1798.059 627.706 1808 627.706 Z" fill="#ffffff" stroke="#006837" stroke-width="2"/>
+    <path d="M1793 653 L1794 653 C1795.105 653 1796 653.895 1796 655 L1796 730 C1796 731.105 1795.105 732 1794 732 L1793 732 C1791.895 732 1791 731.105 1791 730 L1791 655 C1791 653.895 1791.895 653 1793 653 Z" fill="#158271" stroke="#158271"/>
+    <text transform="matrix(1 0 0 1 1814 659)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#158271"><tspan x="0" y="0">ChatDbContext • EF Core</tspan></text>
+    <text transform="matrix(1 0 0 1 1814 707)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#526277"><tspan x="0" y="0">Migration AddChatConversations</tspan></text>
+    <path d="M1808 874.305 L2292 874.305 C2301.941 874.305 2310 883.291 2310 894.377 L2310 1015.927 C2310 1027.013 2301.941 1036 2292 1036 L1808 1036 C1798.059 1036 1790 1027.013 1790 1015.927 L1790 894.377 C1790 883.291 1798.059 874.305 1808 874.305 Z" fill="#ffffff" stroke="#a67c52" stroke-width="2"/>
+    <path d="M1793 909 L1794 909 C1795.105 909 1796 909.895 1796 911 L1796 1016 C1796 1017.105 1795.105 1018 1794 1018 L1793 1018 C1791.895 1018 1791 1017.105 1791 1016 L1791 911 C1791 909.895 1791.895 909 1793 909 Z" fill="#b87516" stroke="#b87516"/>
+    <text transform="matrix(1 0 0 1 1814 909)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="29" font-weight="600" fill="#b87516"><tspan x="0" y="0">Ollama</tspan></text>
+    <text transform="matrix(1 0 0 1 1814 957)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#526277"><tspan x="0" y="0">Serveur du modèle LLM</tspan></text>
+    <text transform="matrix(1 0 0 1 1814 991)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="23" fill="#526277"><tspan x="0" y="0">Modèle LLM configuré côté serveur</tspan></text>
+    <path d="M680 798 L765 798 L765 466 L880 466" fill="none" stroke="#2875cb" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M880 466 L868.5 472 L868.5 460 Z" fill="#2875cb"/>
+    <path d="M680 798 L691.5 792 L691.5 804 Z" fill="#2875cb"/>
+    <text transform="matrix(1 0 0 1 715 591)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="21" font-weight="600" fill="#2875cb"><tspan x="0" y="0">REST</tspan></text>
+    <path d="M680 985 L805 985 L805 698 L880 698" fill="none" stroke="#2875cb" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M880 698 L868.5 704 L868.5 692 Z" fill="#2875cb"/>
+    <path d="M680 985 L691.5 979 L691.5 991 Z" fill="#2875cb"/>
+    <text transform="matrix(1 0 0 1 729 883)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="21" font-weight="600" fill="#2875cb"><tspan x="0" y="0">AG-UI</tspan></text>
+    <text transform="matrix(1 0 0 1 732 910)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="21" fill="#2875cb"><tspan x="0" y="0">+ SSE</tspan></text>
+    <path d="M1230 756 L1230 821" fill="none" stroke="#158271" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M1230 821 L1224 809.5 L1236 809.5 Z" fill="#158271"/>
+    <path d="M1580 466 L1670 466 L1670 698 L1790 698" fill="none" stroke="#158271" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M1790 698 L1778.5 704 L1778.5 692 Z" fill="#158271"/>
+    <path d="M1580 466 L1591.5 460 L1591.5 472 Z" fill="#158271"/>
+    <path d="M1580 886 L1710 886 L1710 726 L1790 726" fill="none" stroke="#158271" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M1790 726 L1778.5 732 L1778.5 720 Z" fill="#158271"/>
+    <path d="M1580 886 L1591.5 880 L1591.5 892 Z" fill="#158271"/>
+    <path d="M2050 625 L2050 550" fill="none" stroke="#158271" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M2050 550 L2056 561.5 L2044 561.5 Z" fill="#158271"/>
+    <path d="M2050 628 L2044 616.5 L2056 616.5 Z" fill="#158271"/>
+    <path d="M1580 966 L1790 966" fill="none" stroke="#b87516" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M1790 966 L1778.5 972 L1778.5 960 Z" fill="#b87516"/>
+    <path d="M1580 966 L1591.5 960 L1591.5 972 Z" fill="#b87516"/>
+    <text transform="matrix(1 0 0 1 1651.907 953.758)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="21" font-weight="600" fill="#b87516"><tspan x="0" y="0">Inférence</tspan></text>
+    <path d="M1230 1020 L1230 1095" fill="none" stroke="#7e56b3" stroke-width="4" stroke-linejoin="round" stroke-dasharray="8 8"/>
+    <path d="M1230 1095 L1224 1083.5 L1236 1083.5 Z" fill="#7e56b3"/>
+    <path d="M880 1145 L680 1145" fill="none" stroke="#7e56b3" stroke-width="4" stroke-linejoin="round" stroke-dasharray="8 8"/>
+    <path d="M680 1145 L691.5 1139 L691.5 1151 Z" fill="#7e56b3"/>
+    <text transform="matrix(1 0 0 1 743 1132)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="20" font-weight="600" fill="#7e56b3"><tspan x="0" y="0">SignalR</tspan></text>
+    <path d="M80 1252 L2320 1252 C2331.046 1252 2340 1260.954 2340 1272 L2340 1457 C2340 1468.046 2331.046 1477 2320 1477 L80 1477 C68.954 1477 60 1468.046 60 1457 L60 1272 C60 1260.954 68.954 1252 80 1252 Z" fill="#ffffff" stroke="#0071bc" stroke-width="2"/>
+    <text transform="matrix(1 0 0 1 88 1293)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="30" font-weight="600" fill="#16314f"><tspan x="0" y="0">Cycle d&apos;un échange</tspan></text>
+    <path d="M107 1351 L107 1351 C117.493 1351 126 1359.507 126 1370 L126 1370 C126 1380.493 117.493 1389 107 1389 L107 1389 C96.507 1389 88 1380.493 88 1370 L88 1370 C88 1359.507 96.507 1351 107 1351 Z" fill="#dfecfc" stroke="#dfecfc" stroke-width="2"/>
+    <text transform="matrix(1 0 0 1 102 1378)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="25" font-weight="600" fill="#2875cb"><tspan x="0" y="0">1</tspan></text>
+    <text transform="matrix(1 0 0 1 142 1349)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="25" font-weight="600" fill="#16314f"><tspan x="0" y="0">Question enregistrée</tspan></text>
+    <text transform="matrix(1 0 0 1 142 1391)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="22" fill="#526277"><tspan x="0" y="0">Historique rechargé</tspan></text>
+    <path d="M670 1351 L670 1351 C680.493 1351 689 1359.507 689 1370 L689 1370 C689 1380.493 680.493 1389 670 1389 L670 1389 C659.507 1389 651 1380.493 651 1370 L651 1370 C651 1359.507 659.507 1351 670 1351 Z" fill="#dfecfc" stroke="#dfecfc" stroke-width="2"/>
+    <text transform="matrix(1 0 0 1 662 1380)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="25" font-weight="600" fill="#2875cb"><tspan x="0" y="0">2</tspan></text>
+    <text transform="matrix(1 0 0 1 705 1349)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="25" font-weight="600" fill="#16314f"><tspan x="0" y="0">Génération et streaming</tspan></text>
+    <text transform="matrix(1 0 0 1 705 1391)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="22" fill="#526277"><tspan x="0" y="0">Points de sauvegarde réguliers</tspan></text>
+    <path d="M1233 1351 L1233 1351 C1243.493 1351 1252 1359.507 1252 1370 L1252 1370 C1252 1380.493 1243.493 1389 1233 1389 L1233 1389 C1222.507 1389 1214 1380.493 1214 1370 L1214 1370 C1214 1359.507 1222.507 1351 1233 1351 Z" fill="#dfecfc" stroke="#dfecfc" stroke-width="2"/>
+    <text transform="matrix(1 0 0 1 1228 1379)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="25" font-weight="600" fill="#2875cb"><tspan x="0" y="0">3</tspan></text>
+    <text transform="matrix(1 0 0 1 1268 1349)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="25" font-weight="600" fill="#16314f"><tspan x="0" y="0">Réponse finalisée</tspan></text>
+    <text transform="matrix(1 0 0 1 1268 1391)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="22" fill="#526277"><tspan x="0" y="0">Completed / Cancelled / Failed</tspan></text>
+    <path d="M1796 1351 L1796 1351 C1806.493 1351 1815 1359.507 1815 1370 L1815 1370 C1815 1380.493 1806.493 1389 1796 1389 L1796 1389 C1785.507 1389 1777 1380.493 1777 1370 L1777 1370 C1777 1359.507 1785.507 1351 1796 1351 Z" fill="#dfecfc" stroke="#dfecfc" stroke-width="2"/>
+    <text transform="matrix(1 0 0 1 1788 1378)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="25" font-weight="600" fill="#2875cb"><tspan x="0" y="0">4</tspan></text>
+    <text transform="matrix(1 0 0 1 1831 1349)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="25" font-weight="600" fill="#16314f"><tspan x="0" y="0">Conversation réouverte</tspan></text>
+    <text transform="matrix(1 0 0 1 1831 1391)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="22" fill="#526277"><tspan x="0" y="0">Contexte restauré pour l&apos;IA</tspan></text>
+    <text transform="matrix(1 0 0 1 88 1448)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="22" fill="#526277"><tspan x="0" y="0">Accès anonyme de test : X-Conversation-Key → empreinte SHA-256 en base. OpenID Connect viendra plus tard.</tspan></text>
+    <text transform="matrix(1 0 0 1 60 1515)" x="0" y="0" xml:space="preserve" font-family="&apos;Segoe UI&apos;" font-size="22" fill="#526277"><tspan x="0" y="0">Les messages et le raisonnement sont persistés ; les métriques SignalR restent temporaires.</tspan></text>
+  </g>
+</svg>

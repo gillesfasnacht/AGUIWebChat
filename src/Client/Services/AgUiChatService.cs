@@ -1,4 +1,4 @@
-﻿using AGUI.Abstractions;
+using AGUI.Abstractions;
 using AGUI.Client;
 using AGUIWebChat.Client.Models;
 using Microsoft.Agents.AI;
@@ -11,29 +11,39 @@ namespace AGUIWebChat.Client.Services;
 public sealed class AgUiChatService
 {
     private readonly AIAgent _remoteAgent;
-    private readonly AgentSession _session;
+    private readonly HttpClient _httpClient;
+    private readonly ConversationIdentity _identity;
     private readonly TelemetryService _telemetry;
     public event Action<string>? RunStarted;
 
-    public AgUiChatService(HttpClient httpClient, TelemetryService telemetry)
+    public AgUiChatService(HttpClient httpClient, TelemetryService telemetry, ConversationIdentity identity)
     {
         _telemetry = telemetry;
+        _httpClient = httpClient;
+        _identity = identity;
 
         var chatClient = new AGUIChatClient(new AGUIChatClientOptions(httpClient, "/ag-ui"));
 
         _remoteAgent = chatClient.AsAIAgent();
-        _session = _remoteAgent.CreateSessionAsync().GetAwaiter().GetResult();
+
     }
 
     public async IAsyncEnumerable<AgentResponseUpdate> SendAsync(
         string message,
+        Guid conversationId,
+        Guid messageId,
         ChatSettings settings,
         [EnumeratorCancellation]
         CancellationToken cancellationToken = default)
     {
+        _httpClient.DefaultRequestHeaders.Remove("X-Conversation-Key");
+        _httpClient.DefaultRequestHeaders.Add("X-Conversation-Key", await _identity.GetKeyAsync(cancellationToken));
+        var session = await _remoteAgent.CreateSessionAsync(cancellationToken);
         var state = JsonSerializer.SerializeToElement(
             new
             {
+                conversationId,
+                messageId,
                 thinkingEffort = settings.ThinkingEffort.ToString(),
                 temperature = settings.Temperature,
                 topP = settings.TopP,
@@ -54,9 +64,12 @@ public sealed class AgUiChatService
             }
         };
 
-        await foreach (var update in _remoteAgent.RunStreamingAsync(message, _session, runOptions, cancellationToken))
+        await foreach (var update in _remoteAgent.RunStreamingAsync(message, session, runOptions, cancellationToken))
         {
             var chatUpdate = update.AsChatResponseUpdate();
+
+            if (chatUpdate.RawRepresentation is RunErrorEvent error)
+                throw new InvalidOperationException(error.Message);
 
             if (chatUpdate.RawRepresentation is RunStartedEvent runStarted)
             {

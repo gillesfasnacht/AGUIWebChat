@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="2200" viewBox="0 0 2400 2200">
+<rect width="100%" height="100%" fill="#F4F7FC"/>
+<text x="70" y="38" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="48" font-weight="600" fill="#16314F">AGUI WebChat • MCD du serveur</text>
+<text x="70" y="108" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="29" font-weight="400" fill="#27374D">Entités, attributs et cardinalités du modèle actuellement implémenté</text>
+<text x="70" y="160" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#27374D">Identifiants soulignés  •  ? = attribut facultatif  •  les associations remplacent les clés étrangères dans cette vue conceptuelle</text>
+<rect x="60" y="230" width="2280" height="1110" rx="22" fill="#EAF0F8" stroke="#DCE3EE" stroke-width="2"/>
+<text x="90" y="252" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#2875CB">CATALOGUE IA</text>
+<polyline points="550,505 980,505" fill="none" stroke="#6D8098" stroke-width="3"/>
+<ellipse cx="765" cy="505" rx="95.0" ry="37" fill="#EDF3FB" stroke="#7892AF" stroke-width="2"/>
+<text x="723.5" y="486" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="600" fill="#31516F">Fournir</text>
+<text x="582" y="459" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#243F60">0,N</text>
+<text x="904" y="459" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#243F60">1,1</text>
+<polyline points="1420,425 1830,425" fill="none" stroke="#6D8098" stroke-width="3"/>
+<ellipse cx="1625" cy="425" rx="95.0" ry="37" fill="#EDF3FB" stroke="#7892AF" stroke-width="2"/>
+<text x="1563.5" y="406" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="600" fill="#31516F">Configurer</text>
+<text x="1450" y="379" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#243F60">0,1</text>
+<text x="1752" y="379" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#243F60">1,1</text>
+<polyline points="1420,775 1830,775" fill="none" stroke="#6D8098" stroke-width="3"/>
+<ellipse cx="1625" cy="775" rx="95.0" ry="37" fill="#EDF3FB" stroke="#7892AF" stroke-width="2"/>
+<text x="1574.0" y="756" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="600" fill="#31516F">Proposer</text>
+<text x="1450" y="729" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#243F60">0,N</text>
+<text x="1752" y="729" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#243F60">1,1</text>
+<polyline points="550,1000 690,1000 690,720 980,720" fill="none" stroke="#6D8098" stroke-width="3"/>
+<ellipse cx="820" cy="720" rx="95.0" ry="37" fill="#EDF3FB" stroke="#7892AF" stroke-width="2"/>
+<text x="779.5" y="701" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="600" fill="#31516F">Utiliser</text>
+<text x="577" y="954" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#243F60">1,1</text>
+<text x="905" y="674" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#243F60">0,N</text>
+<rect x="100" y="360" width="450" height="268" rx="18" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+<rect x="100" y="360" width="450" height="65" rx="18" fill="#2875CB" stroke="#2875CB" stroke-width="2"/>
+<rect x="101" y="392" width="448" height="33" fill="#2875CB"/>
+<text x="122" y="372" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#FFFFFF">AIProvider</text>
+<text x="124" y="440" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="600" fill="#27374D">Id</text>
+<polyline points="124,471 148.0,471" fill="none" stroke="#2875CB" stroke-width="2"/>
+<text x="124" y="474" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Name</text>
+<text x="124" y="508" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">ProviderType</text>
+<text x="124" y="542" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Endpoint ?</text>
+<text x="124" y="576" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">IsEnabled</text>
+<rect x="980" y="345" width="440" height="438" rx="18" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+<rect x="980" y="345" width="440" height="65" rx="18" fill="#2875CB" stroke="#2875CB" stroke-width="2"/>
+<rect x="981" y="377" width="438" height="33" fill="#2875CB"/>
+<text x="1002" y="357" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#FFFFFF">AIModel</text>
+<text x="1004" y="425" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="600" fill="#27374D">Id</text>
+<polyline points="1004,456 1028.0,456" fill="none" stroke="#2875CB" stroke-width="2"/>
+<text x="1004" y="459" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">ModelId</text>
+<text x="1004" y="493" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">DisplayName</text>
+<text x="1004" y="527" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">ThinkingMode</text>
+<text x="1004" y="561" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">SupportsVision</text>
+<text x="1004" y="595" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">SupportsTools</text>
+<text x="1004" y="629" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">SupportsStreaming</text>
+<text x="1004" y="663" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">ContextWindow ?</text>
+<text x="1004" y="697" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">MaxOutputTokens ?</text>
+<text x="1004" y="731" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">IsEnabled</text>
+<rect x="1830" y="320" width="450" height="268" rx="18" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+<rect x="1830" y="320" width="450" height="65" rx="18" fill="#2875CB" stroke="#2875CB" stroke-width="2"/>
+<rect x="1831" y="352" width="448" height="33" fill="#2875CB"/>
+<text x="1852" y="332" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#FFFFFF">AIModelDefaults</text>
+<text x="1854" y="400" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="600" fill="#27374D">Id</text>
+<polyline points="1854,431 1878.0,431" fill="none" stroke="#2875CB" stroke-width="2"/>
+<text x="1854" y="434" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Temperature ?</text>
+<text x="1854" y="468" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">TopP ?</text>
+<text x="1854" y="502" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">TopK ?</text>
+<text x="1854" y="536" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">NumCtx ?</text>
+<rect x="1830" y="690" width="450" height="268" rx="18" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+<rect x="1830" y="690" width="450" height="65" rx="18" fill="#2875CB" stroke="#2875CB" stroke-width="2"/>
+<rect x="1831" y="722" width="448" height="33" fill="#2875CB"/>
+<text x="1852" y="702" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#FFFFFF">AIModelReasoningEffort</text>
+<text x="1854" y="770" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="600" fill="#27374D">Id</text>
+<polyline points="1854,801 1878.0,801" fill="none" stroke="#2875CB" stroke-width="2"/>
+<text x="1854" y="804" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">DisplayName</text>
+<text x="1854" y="838" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Value</text>
+<text x="1854" y="872" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">SortOrder</text>
+<text x="1854" y="906" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">IsDefault</text>
+<rect x="100" y="810" width="450" height="438" rx="18" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+<rect x="100" y="810" width="450" height="65" rx="18" fill="#2875CB" stroke="#2875CB" stroke-width="2"/>
+<rect x="101" y="842" width="448" height="33" fill="#2875CB"/>
+<text x="122" y="822" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#FFFFFF">AIAgent</text>
+<text x="124" y="890" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="600" fill="#27374D">Id</text>
+<polyline points="124,921 148.0,921" fill="none" stroke="#2875CB" stroke-width="2"/>
+<text x="124" y="924" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Name</text>
+<text x="124" y="958" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Description ?</text>
+<text x="124" y="992" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">SystemPrompt</text>
+<text x="124" y="1026" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Temperature ?</text>
+<text x="124" y="1060" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">TopP ?</text>
+<text x="124" y="1094" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">TopK ?</text>
+<text x="124" y="1128" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">NumCtx ?</text>
+<text x="124" y="1162" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">ReasoningEffort ?</text>
+<text x="124" y="1196" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">IsEnabled</text>
+<rect x="900" y="990" width="1350" height="320" rx="18" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+<text x="930" y="1010" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="29" font-weight="600" fill="#16314F">Règles et lecture des associations</text>
+<text x="930" y="1064" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#526277">Un modèle appartient à un fournisseur ; il peut être utilisé par plusieurs agents.</text>
+<text x="930" y="1101" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#526277">Un modèle possède zéro ou une configuration de paramètres par défaut.</text>
+<text x="930" y="1138" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#526277">Il peut proposer plusieurs niveaux d&#x27;effort de raisonnement.</text>
+<text x="930" y="1175" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#526277">Unicité : nom du fournisseur ; modèle par fournisseur + ModelId ; nom de l&#x27;agent.</text>
+<text x="930" y="1212" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#526277">Unicité : une configuration par modèle ; valeur d&#x27;effort unique par modèle.</text>
+<text x="930" y="1249" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="400" fill="#526277">ReasoningEffort d&#x27;un agent est une valeur validée, pas une association EF Core.</text>
+<rect x="60" y="1390" width="2280" height="640" rx="22" fill="#E9F3EF" stroke="#D1E5DB" stroke-width="2"/>
+<text x="90" y="1410" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#158271">CONVERSATIONS ET MESSAGES</text>
+<polyline points="880,1630 1480,1630" fill="none" stroke="#4F8276" stroke-width="3"/>
+<ellipse cx="1180" cy="1630" rx="110.0" ry="37" fill="#EDF3FB" stroke="#7892AF" stroke-width="2"/>
+<text x="1130.5" y="1611" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="600" fill="#31516F">Contenir</text>
+<text x="919" y="1583" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#243F60">0,N</text>
+<text x="1384" y="1583" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="27" font-weight="600" fill="#243F60">1,1</text>
+<rect x="260" y="1490" width="620" height="370" rx="18" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+<rect x="260" y="1490" width="620" height="65" rx="18" fill="#158271" stroke="#158271" stroke-width="2"/>
+<rect x="261" y="1522" width="618" height="33" fill="#158271"/>
+<text x="282" y="1502" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#FFFFFF">ChatConversation</text>
+<text x="284" y="1570" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="600" fill="#27374D">Id</text>
+<polyline points="284,1601 308.0,1601" fill="none" stroke="#158271" stroke-width="2"/>
+<text x="284" y="1604" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">OwnerKey</text>
+<text x="284" y="1638" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Title</text>
+<text x="284" y="1672" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">TitleIsCustom</text>
+<text x="284" y="1706" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">CreatedAt</text>
+<text x="284" y="1740" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">UpdatedAt</text>
+<text x="284" y="1774" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">ActiveRunId ?</text>
+<text x="284" y="1808" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">ActiveUntil ?</text>
+<rect x="1480" y="1490" width="650" height="438" rx="18" fill="#FFFFFF" stroke="#DCE3EE" stroke-width="2"/>
+<rect x="1480" y="1490" width="650" height="65" rx="18" fill="#158271" stroke="#158271" stroke-width="2"/>
+<rect x="1481" y="1522" width="648" height="33" fill="#158271"/>
+<text x="1502" y="1502" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="30" font-weight="600" fill="#FFFFFF">StoredChatMessage</text>
+<text x="1504" y="1570" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="600" fill="#27374D">Id</text>
+<polyline points="1504,1601 1528.0,1601" fill="none" stroke="#158271" stroke-width="2"/>
+<text x="1504" y="1604" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Sequence</text>
+<text x="1504" y="1638" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Role</text>
+<text x="1504" y="1672" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Content</text>
+<text x="1504" y="1706" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Reasoning ?</text>
+<text x="1504" y="1740" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">CreatedAt</text>
+<text x="1504" y="1774" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">RunId ?</text>
+<text x="1504" y="1808" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">Status</text>
+<text x="1504" y="1842" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">ModelName ?</text>
+<text x="1504" y="1876" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="26" font-weight="400" fill="#27374D">SettingsJson ?</text>
+<text x="945" y="1725" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#315B4F">Une conversation peut être vide.</text>
+<text x="945" y="1763" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#315B4F">Chaque message appartient</text>
+<text x="945" y="1801" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#315B4F">à une seule conversation.</text>
+<text x="945" y="1860" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#315B4F">Sequence est unique</text>
+<text x="945" y="1898" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#315B4F">dans une conversation.</text>
+<text x="90" y="1982" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="22" font-weight="400" fill="#315B4F">StoredChatMessage correspond à la table ChatMessages. ActiveRunId / ActiveUntil gèrent le verrou technique de génération.</text>
+<text x="70" y="2070" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="24" font-weight="600" fill="#16314F">Aucune association actuelle entre les conversations et le catalogue IA : ModelName et SettingsJson sont des instantanés.</text>
+<text x="70" y="2115" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#27374D">OwnerKey contient l&#x27;empreinte de la clé anonyme de test. Aucun utilisateur ni fournisseur OpenID Connect n&#x27;est encore modélisé.</text>
+<text x="70" y="2153" dominant-baseline="text-before-edge" font-family="Segoe UI,Arial,sans-serif" font-size="23" font-weight="400" fill="#27374D">Role : User / Assistant    •    Status : InProgress / Completed / Cancelled / Failed</text>
+</svg>

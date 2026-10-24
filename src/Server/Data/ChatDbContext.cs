@@ -1,4 +1,5 @@
-﻿using AGUIWebChat.Server.Domain.AI;
+using AGUIWebChat.Server.Domain.Chat;
+using AGUIWebChat.Server.Domain.AI;
 using Microsoft.EntityFrameworkCore;
 
 namespace AGUIWebChat.Server.Data
@@ -19,6 +20,9 @@ namespace AGUIWebChat.Server.Data
 
         public DbSet<AIAgent> AIAgents => Set<AIAgent>();
 
+        public DbSet<ChatConversation> ChatConversations => Set<ChatConversation>();
+        public DbSet<StoredChatMessage> ChatMessages => Set<StoredChatMessage>();
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -28,6 +32,30 @@ namespace AGUIWebChat.Server.Data
             ConfigureAIModelDefaults(modelBuilder);
             ConfigureReasoningEffort(modelBuilder);
             ConfigureAIAgent(modelBuilder);
+            ConfigureConversations(modelBuilder);
+        }
+
+        private static void ConfigureConversations(ModelBuilder modelBuilder)
+        {
+            var conversation = modelBuilder.Entity<ChatConversation>();
+            conversation.ToTable("ChatConversations");
+            conversation.HasKey(x => x.Id);
+            conversation.Property(x => x.OwnerKey).HasMaxLength(64).IsRequired();
+            conversation.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            conversation.Property(x => x.ActiveRunId).IsConcurrencyToken();
+            conversation.HasIndex(x => new { x.OwnerKey, x.UpdatedAt });
+
+            var message = modelBuilder.Entity<StoredChatMessage>();
+            message.ToTable("ChatMessages");
+            message.HasKey(x => x.Id);
+            message.Property(x => x.Role).HasConversion<string>().HasMaxLength(20);
+            message.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+            message.Property(x => x.Content).IsRequired();
+            message.Property(x => x.RunId).HasMaxLength(100);
+            message.Property(x => x.ModelName).HasMaxLength(200);
+            message.HasIndex(x => new { x.ConversationId, x.Sequence }).IsUnique();
+            message.HasOne(x => x.Conversation).WithMany(x => x.Messages)
+                .HasForeignKey(x => x.ConversationId).OnDelete(DeleteBehavior.Cascade);
         }
 
         private static void ConfigureAIProvider(ModelBuilder modelBuilder)

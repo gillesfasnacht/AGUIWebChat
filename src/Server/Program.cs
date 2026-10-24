@@ -1,3 +1,4 @@
+using AGUIWebChat.Server.Services.Chat;
 using AGUIWebChat.Middleware;
 using AGUIWebChat.Server.Agents;
 using AGUIWebChat.Server.Data;
@@ -31,6 +32,8 @@ builder.Services.AddSingleton<OllamaApiClient>(services =>
 
     return new OllamaApiClient(httpClient, configuration["OLLAMA_MODEL"] ?? "granite4.2:8b");
 });
+
+builder.Services.AddSingleton<IChatClient>(services => services.GetRequiredService<OllamaApiClient>());
 
 // Use Serilog for logging requests and events
 builder.Host.UseSerilog((context, configuration) =>
@@ -102,6 +105,9 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 
 // Add AGUI server services for hosting the AG-UI interface
 builder.Services.AddAGUIServer();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IConversationService, ConversationService>();
+builder.Services.AddSingleton<ConversationRunCoordinator>();
 
 // Add the database context for AI models 
 if (!builder.Environment.IsEnvironment("Testing"))
@@ -151,7 +157,7 @@ var telemetryHub = app.Services.GetRequiredService<IHubContext<TelemetryHub>>();
 
 // Create an AI agent for enterprise support using the Ollama API client
 AIAgent enterpriseAgent = ChatAgentFactory.CreateAgent(
-    app.Services.GetRequiredService<OllamaApiClient>(),
+    app.Services.GetRequiredService<IChatClient>(),
     name: "EnterpriseSupportAgent",
     instruction: """
         You are a helpful business support agent
@@ -166,7 +172,9 @@ AIAgent enterpriseAgent = ChatAgentFactory.CreateAgent(
         TopK = 40,
         NumCtx = 16384
     },
-    telemetryHub: telemetryHub);
+    telemetryHub: telemetryHub,
+    conversationRuns: app.Services.GetRequiredService<ConversationRunCoordinator>(),
+    httpContextAccessor: app.Services.GetRequiredService<IHttpContextAccessor>());
 
 app.UseWhen(context => context.Request.Path.StartsWithSegments("/api"), api =>
 {
@@ -185,5 +193,6 @@ app.MapAGUIServer("/ag-ui", enterpriseAgent);
 app.MapAIProviderEndpoints();
 app.MapAIModelEndpoints();
 app.MapAIAgentEndpoints();
+app.MapConversationEndpoints();
 
 await app.RunAsync();

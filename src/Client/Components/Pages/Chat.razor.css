@@ -121,3 +121,82 @@
 .brand-text {
     color: var(--colorBrandForeground1);
 }
+
+/* ============================================================
+   Independent conversation history, immediately to the right of the AppBar
+   ============================================================ */
+
+.chat-workspace {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    gap: 16px;
+}
+
+.chat-page { 
+    flex: 1; 
+    min-width: 0; 
+}
+
+.history-panel { 
+    width: 280px; 
+    flex: 0 0 280px; 
+    min-height: 0; 
+    border-right: 1px solid var(--colorNeutralStroke2); 
+    background: var(--colorNeutralBackground2); 
+}
+
+.sidebar-collapsed .history-panel { 
+    display: none; 
+}
+
+.history-controls { 
+    display: flex; 
+    padding-top: 8px;
+}
+
+.mobile-history-toggle, .mobile-history-close, .history-backdrop { 
+    display: none; 
+}
+
+@media (max-width: 900px) {
+    .history-panel, .sidebar-collapsed .history-panel { 
+        display: none; 
+    }
+
+    .mobile-sidebar-open .history-panel { 
+        display: flex; 
+        flex-direction: column; 
+        position: absolute; 
+        inset: 0 auto 0 0; 
+        width: min(300px, 85%); 
+        z-index: 20; 
+    }
+
+    .desktop-history-toggle { 
+        display: none; 
+    }
+
+    .mobile-history-toggle, .mobile-history-close { 
+        display: block; 
+    }
+
+    .history-backdrop { 
+        display: block; 
+        position: absolute; 
+        inset: 0; 
+        border: 0; 
+        background: #0006; 
+        z-index: 19; 
+    }
+
+    .chat-input-container { 
+        flex-wrap: wrap; 
+    }
+}
+
+.chat-page header h1 { 
+    overflow-wrap: anywhere; 
+}

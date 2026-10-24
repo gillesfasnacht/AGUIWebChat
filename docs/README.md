@@ -74,6 +74,40 @@ Validation errors include the precise messages in `errors.model`.
 Swagger is enabled in the Development and Testing environments; it is disabled in Production.
 The SignalR telemetry connection is not an ordinary REST operation.
 
+## Saved Conversations
+
+Chat history is stored in SQL Server. Apply the new migration before starting the server:
+
+```powershell
+dotnet ef database update --project src/Server --startup-project src/Server
+```
+
+The chat page shows a collapsible history panel immediately to the right of the AppBar.
+Use **New conversation** to start a fresh discussion; it is created on the first message.
+Select a title to reopen a conversation at `/chat/{id}`. Rename and delete actions are available
+beside each title; deletion requires confirmation. The history is paginated and scrolls
+independently from the messages. On smaller screens, **Conversations** opens an overlay panel.
+
+The server saves the user message before inference, checkpoints the partial assistant response,
+and records completion, cancellation or failure. Stop and navigation away cancel the current
+response and preserve the partial text. New requests reconstruct their context from the stored
+messages instead of reusing another conversation's agent session. Concurrent requests for one
+conversation are rejected; an expiring, renewed lease allows recovery after a server restart.
+A response still marked in progress after a crash is shown as incomplete and recovered on the next send.
+
+History is scoped to an anonymous browser key stored under `agui-conversation-key` in local storage.
+The REST API and AG-UI requests carry this capability in `X-Conversation-Key`; only its hash is stored
+in SQL Server. Clearing local storage loses access to that browser's conversations without deleting
+them from the database. This is not account authentication or cross-device history synchronization.
+An authenticated owner identity should replace this mechanism before offering shared accounts.
+
+The `/api/conversations` endpoints are documented in Swagger. AG-UI requests now require
+`conversationId` and a unique `messageId` in their state, as well as the browser-key header.
+Conversation persistence uses the existing configured enterprise-support agent; it does not
+change the runtime agent to one selected from the agent catalogue.
+Model name and effective inference settings are saved with assistant messages. Live monitoring
+metrics remain transient; message text, reasoning text, run identifiers and response status are persisted.
+
 ## Settings and Telemetry
 
 Invalid chat inference settings fall back to their default values. Server-side limits are:
