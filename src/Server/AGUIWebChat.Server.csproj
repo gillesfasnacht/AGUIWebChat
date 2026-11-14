@@ -6,20 +6,19 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Mapster" Version="10.0.13" />
-    <PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.26.0-preview.261023.1" />
-    <PackageReference Include="Microsoft.Agents.AI" Version="1.26.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.14" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
+    <PackageReference Include="Mapster" Version="10.0.14" />
+    <PackageReference Include="Microsoft.Agents.AI.Hosting.AGUI.AspNetCore" Version="1.28.0-preview.261106.1" />
+    <PackageReference Include="Microsoft.Agents.AI" Version="1.28.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
-	<PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.22" />	  
-	<PackageReference Include="OllamaSharp" Version="5.5.0" />
-	<PackageReference Include="OpenTelemetry" Version="1.20.1" />
-	<PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.20.1" />
-	<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.20.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.15" />
+	<PackageReference Include="OllamaSharp" Version="5.5.2" />
+	<PackageReference Include="OpenTelemetry" Version="1.21.0" />
+	<PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.21.0" />
+	<PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.21.0" />
 	<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
 	<PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.1" />
   </ItemGroup>
